@@ -4,8 +4,9 @@ import com.example.Student.Model.Notification;
 import com.example.Student.Repository.NotificationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotificationService {
@@ -30,6 +31,18 @@ public class NotificationService {
         List<Notification> notifications = notificationRepo.findByUserIdOrderByTimestampDesc(userId);
         notifications.forEach(n -> n.setRead(true));
         notificationRepo.saveAll(notifications);
+    }
+
+    // ✅ New: Add reply to a notification
+    public boolean addReply(Long notificationId, String reply) {
+        Optional<Notification> optionalNotification = notificationRepo.findById(notificationId);
+        if (optionalNotification.isPresent()) {
+            Notification notification = optionalNotification.get();
+            notification.setReply(reply);
+            notificationRepo.save(notification);
+            return true;
+        }
+        return false;
     }
 
 

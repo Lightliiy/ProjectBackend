@@ -62,4 +62,34 @@ public class BookingService {
 
         return savedBooking;
     }
+
+    public Booking approveBooking(Long id) {
+        Optional<Booking> optionalBooking = bookingRepo.findById(id);
+        if (optionalBooking.isPresent()) {
+            Booking booking = optionalBooking.get();
+            booking.setStatus(BookingStatus.APPROVE);
+            bookingRepo.save(booking);
+
+            // ✅ Send a notification to the student
+            notificationService.createNotification(
+                    booking.getStudentId(),
+                    "Booking Approved",
+                    "Your booking for " + booking.getScheduledDate() + " at " + booking.getTimeSlot() + " has been approved.",
+                    "booking"
+            );
+
+            return booking;
+        }
+        return null;
+    }
+
+    public Booking cancelBooking(Long id) {
+        Optional<Booking> booking = bookingRepo.findById(id);
+        if (booking.isPresent()) {
+            booking.get().setStatus(BookingStatus.CANCEL);
+            return bookingRepo.save(booking.get());
+        }
+        return null;
+    }
+
 }

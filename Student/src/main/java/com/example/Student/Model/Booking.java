@@ -25,6 +25,7 @@ public class Booking {
     private String timeSlot;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private BookingStatus status;
 
     @ElementCollection

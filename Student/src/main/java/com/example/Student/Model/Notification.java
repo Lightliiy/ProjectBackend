@@ -20,6 +20,8 @@ public class Notification {
     private String type;
     private boolean isRead = false;
 
+    private String reply;
+
     private LocalDateTime timestamp = LocalDateTime.now();
 
     public Long getId() {
@@ -78,5 +80,11 @@ public class Notification {
         this.timestamp = timestamp;
     }
 
-    // Getters and setters
+    public String getReply() {
+        return reply;
+    }
+
+    public void setReply(String reply) {
+        this.reply = reply;
+    }
 }

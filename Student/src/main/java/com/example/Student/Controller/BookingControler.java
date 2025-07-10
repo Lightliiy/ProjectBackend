@@ -55,4 +55,25 @@ public class BookingControler {
         bookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<?> approveBooking(@PathVariable Long id) {
+        Booking booking = bookingService.approveBooking(id);
+        if (booking != null) {
+            return ResponseEntity.ok(booking);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+        Booking booking = bookingService.cancelBooking(id);
+        if (booking != null) {
+            return ResponseEntity.ok(booking);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
