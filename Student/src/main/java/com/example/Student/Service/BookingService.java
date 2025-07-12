@@ -14,6 +14,8 @@ public class BookingService {
 
     @Autowired
     private BookingRepo bookingRepo;
+
+    @Autowired
     private NotificationService notificationService;
 
     public Booking createBooking(Booking booking) {
@@ -62,6 +64,7 @@ public class BookingService {
 
         return savedBooking;
     }
+
 
     public Booking approveBooking(Long id) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);

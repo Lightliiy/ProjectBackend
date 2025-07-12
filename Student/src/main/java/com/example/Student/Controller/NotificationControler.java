@@ -16,8 +16,8 @@ public class NotificationControler {
     @Autowired
     private NotificationService notificationService;
 
-    @GetMapping("/user/{userId}")
-    public List<Notification> getUserNotifications(@PathVariable String userId) {
+    @GetMapping("/user")
+    public List<Notification> getUserNotifications(@RequestParam String userId) {
         return notificationService.getUserNotifications(userId);
     }
 
@@ -42,13 +42,17 @@ public class NotificationControler {
             @PathVariable Long notificationId,
             @RequestBody Map<String, String> requestBody) {
 
-        String reply = requestBody.get("reply");
-        boolean success = notificationService.addReply(notificationId, reply);
+        System.out.println("Received reply for notificationId: " + notificationId);
+        System.out.println("Reply content: " + requestBody.get("reply"));
+
+        boolean success = notificationService.addReply(notificationId, requestBody.get("reply"));
 
         if (success) {
             return ResponseEntity.ok("Reply added successfully");
         } else {
+            System.out.println("Notification not found for ID: " + notificationId);
             return ResponseEntity.badRequest().body("Notification not found");
         }
     }
+
 }
