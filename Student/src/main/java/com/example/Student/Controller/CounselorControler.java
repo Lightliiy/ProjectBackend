@@ -1,6 +1,7 @@
 package com.example.Student.Controller;
 
 import com.example.Student.Model.Counselor;
+import com.example.Student.Repository.CounselorRepo;
 import com.example.Student.Service.CounselorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,9 @@ public class CounselorControler {
 
     @Autowired
     private CounselorService counselorService;
+
+    @Autowired
+    private CounselorRepo counselorRepo;
 
     @GetMapping
     public List<Counselor> getAllCounselors() {
@@ -93,7 +97,6 @@ public class CounselorControler {
         return ResponseEntity.ok(slots);
     }
 
-
     @GetMapping("/assigned")
     public ResponseEntity<Counselor> getCounselorByStudentId(@RequestParam String studentId) {
 //    public ResponseEntity<Counselor> getCounselorByStudentId(@PathVariable String studentId) {
@@ -101,6 +104,15 @@ public class CounselorControler {
         return counselor.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<Counselor> getCounselorProfile(@RequestParam String email) {
+        Optional<Counselor> counselor = counselorRepo.findByEmail(email);
+        return counselor.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+
 
 
 

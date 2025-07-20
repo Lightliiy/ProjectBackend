@@ -1,5 +1,6 @@
 package com.example.Student.Model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,12 +11,15 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long counselorId; // counselor user id
-    private Long studentId;   // student user id
+    private Long counselorId;
+
+    private String counselorName;// counselor user id
+    private String studentId;   // student user id
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Message> messages;
 
     // Constructors, getters, setters
@@ -28,6 +32,14 @@ public class Chat {
         this.id = id;
     }
 
+    public String getCounselorName() {
+        return counselorName;
+    }
+
+    public void setCounselorName(String counselorName) {
+        this.counselorName = counselorName;
+    }
+
     public Long getCounselorId() {
         return counselorId;
     }
@@ -36,11 +48,11 @@ public class Chat {
         this.counselorId = counselorId;
     }
 
-    public Long getStudentId() {
+    public String getStudentId() {
         return studentId;
     }
 
-    public void setStudentId(Long studentId) {
+    public void setStudentId(String studentId) {
         this.studentId = studentId;
     }
 

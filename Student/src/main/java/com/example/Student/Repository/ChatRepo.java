@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface ChatRepo extends JpaRepository<Chat, Long> {
-    Optional<Chat> findByCounselorIdAndStudentId(Long counselorId, Long studentId);
+    Optional<Chat> findByCounselorIdAndStudentId(Long counselorId, String studentId);
 }
 

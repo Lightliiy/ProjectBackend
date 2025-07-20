@@ -1,5 +1,6 @@
 package com.example.Student.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -12,11 +13,13 @@ public class Message {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "chat_id")
     private Chat chat;
 
-    private Long senderId;  // who sent the message (counselor or student)
+    private String senderId;  // who sent the message (counselor or student)
     private String content;
+
 
     private LocalDateTime timestamp = LocalDateTime.now();
 
@@ -38,11 +41,11 @@ public class Message {
         this.chat = chat;
     }
 
-    public Long getSenderId() {
+    public String getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(Long senderId) {
+    public void setSenderId(String senderId) {
         this.senderId = senderId;
     }
 
