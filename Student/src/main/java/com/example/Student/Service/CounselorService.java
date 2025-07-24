@@ -13,49 +13,61 @@ import java.util.Optional;
 public class CounselorService {
 
     @Autowired
-    private CounselorRepo counselorRepository;
+    private CounselorRepo counselorRepo;
 
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     public long getCounselorCount() {
-        return counselorRepository.count();  // Count counselors in the repository
+        return counselorRepo.count();  // Count counselors in the repository
     }
 
     public List<Counselor> getAllCounselors() {
-        return counselorRepository.findAll();
+        return counselorRepo.findAll();
     }
 
     public Optional<Counselor> getCounselorById(Long id) {
-        return counselorRepository.findById(id);
+        return counselorRepo.findById(id);
     }
 
     public Counselor addCounselor(Counselor counselor) {
-        return counselorRepository.save(counselor);
+        return counselorRepo.save(counselor);
     }
 
     public Optional<Counselor> getCounselorByStudentId(String studentId) {
-        return counselorRepository.findByStudents_StudentId(studentId);
+        return counselorRepo.findByStudents_StudentId(studentId);
+    }
+
+    public CounselorService(PasswordEncoder passwordEncoder, CounselorRepo counselorRepo) {
+        this.passwordEncoder = passwordEncoder;
+        this.counselorRepo = counselorRepo;
+    }
+
+    public void registerCounselor(Counselor counselor) {
+        String rawPassword = counselor.getPassword();
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+        counselor.setPassword(encodedPassword);
+        counselorRepo.save(counselor);
     }
 
     public Counselor updateCounselor(Long id, Counselor updatedCounselor) {
-        return counselorRepository.findById(id)
+        return counselorRepo.findById(id)
                 .map(c -> {
                     c.setName(updatedCounselor.getName());
                     c.setEmail(updatedCounselor.getEmail());
                     c.setMaxCaseload(updatedCounselor.getMaxCaseload());
                     c.setDepartment(updatedCounselor.getDepartment());
-                    return counselorRepository.save(c);
+                    return counselorRepo.save(c);
                 }).orElseThrow(() -> new RuntimeException("Counselor not found"));
     }
     public void deleteCounselor(Long id) {
-        counselorRepository.deleteById(id);
+        counselorRepo.deleteById(id);
     }
 
 
     public Counselor authenticate(String email, String rawPassword) {
-        Optional<Counselor> optionalCounselor = counselorRepository.findByEmail(email);
+        Optional<Counselor> optionalCounselor = counselorRepo.findByEmail(email);
         if (optionalCounselor.isEmpty()) {
             return null; // email not found
         }

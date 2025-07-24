@@ -31,7 +31,7 @@ public class ChatControler {
     public ResponseEntity<Chat> getOrCreateChat(
             @RequestParam Long counselorId,
             @RequestParam String studentId,
-            @RequestParam String counselorName) {
+            @RequestParam(required = false) String counselorName) {
         Chat chat = chatService.getOrCreateChat(counselorId, studentId, counselorName);
         return ResponseEntity.ok(chat);
     }

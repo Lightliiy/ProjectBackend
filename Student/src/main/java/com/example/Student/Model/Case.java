@@ -12,7 +12,18 @@ public class Case {
     private Long id;
     private String studentName;
     private String caseDetails;
-    private String status; // "Pending" or "Escalated"
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status;
+
+    private Long counselorId;
+
+    public Long getCounselorId() {
+        return counselorId;
+    }
+
+    public void setCounselorId(Long counselorId) {
+        this.counselorId = counselorId;
+    }// "Pending" or "Escalated"
 
     // Getters and Setters
     public Long getId() {
@@ -39,11 +50,11 @@ public class Case {
         this.caseDetails = caseDetails;
     }
 
-    public String getStatus() {
+    public BookingStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(BookingStatus status) {
         this.status = status;
     }
 }

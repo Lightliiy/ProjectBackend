@@ -1,6 +1,8 @@
 package com.example.Student.Controller;
 
+import com.example.Student.Model.Case;
 import com.example.Student.Model.Student;
+import com.example.Student.Service.CaseService;
 import com.example.Student.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,9 @@ public class StudentControler {
     @Autowired
     private StudentService studentService;
 
+    @Autowired
+    private CaseService caseService;
+
     @GetMapping
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
@@ -28,6 +33,16 @@ public class StudentControler {
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Registration failed: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/escalate-to-hod/{id}")
+    public ResponseEntity<Case> escalateToHOD(@PathVariable Long id) {
+        Case escalated = caseService.escalateToHOD(id);
+        if (escalated == null) {
+            return ResponseEntity.notFound().build();
+        }
+        // Optionally: notify HOD here
+        return ResponseEntity.ok(escalated);
     }
 
 
