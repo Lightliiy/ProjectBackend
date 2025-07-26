@@ -67,7 +67,7 @@ public class CounselorControler {
         return ResponseEntity.ok("Available slots added successfully");
     }
 
-    @PutMapping("/{id}/slots/remove")
+    @DeleteMapping("/{id}/slots/remove")
     public ResponseEntity<?> removeSlot(@PathVariable Long id, @RequestBody String slotToRemove) {
         Optional<Counselor> optionalCounselor = counselorService.getCounselorById(id);
         if (optionalCounselor.isEmpty()) {
@@ -111,10 +111,6 @@ public class CounselorControler {
         return counselor.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
-
-
-
 
     @PutMapping("/update/{id}")
     public Counselor updateCounselor(@PathVariable Long id, @RequestBody Counselor counselor) {

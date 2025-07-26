@@ -31,6 +31,18 @@ public class Booking {
     @ElementCollection
     private List<String> attachments;
 
+    @Transient
+    private List<String> attachmentUrls;
+
+    public List<String> getAttachmentUrls() {
+        return attachmentUrls;
+    }
+
+    public void setAttachmentUrls(List<String> attachmentUrls) {
+        this.attachmentUrls = attachmentUrls;
+    }
+
+
     public Booking() {}
 
     // Getters and setters

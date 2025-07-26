@@ -80,4 +80,12 @@ public class ChatService {
         return messageRepo.save(message);
     }
 
+    public void deleteChat(Long id) throws Exception {
+        boolean exists = chatRepo.existsById(id);
+        if (!exists) {
+            throw new Exception("Chat not found with id: " + id);
+        }
+        chatRepo.deleteById(id);
+    }
+
 }

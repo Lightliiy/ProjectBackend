@@ -98,4 +98,6 @@ public class StudentControler {
             return ResponseEntity.status(404).body("Delete failed: " + e.getMessage());
         }
     }
+
+
 }

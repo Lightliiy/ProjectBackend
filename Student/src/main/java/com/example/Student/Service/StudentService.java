@@ -3,6 +3,7 @@ package com.example.Student.Service;
 import com.example.Student.Model.Student;
 import com.example.Student.Repository.StudentRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,6 +15,15 @@ public class StudentService {
     @Autowired
     private StudentRepo studentRepo;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public Student registerStudent(Student student) {
+        // Encode password before save
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
+        return studentRepo.save(student);
+    }
+
     public long getStudentCount() {
         return studentRepo.count();
     }
@@ -22,11 +32,21 @@ public class StudentService {
         return studentRepo.findAll();
     }
 
-    public Student saveStudent(Student student) {
-        return studentRepo.save(student);
+
+    public Student authenticate(String email, String rawPassword) {
+        Optional<Student> optionalStudent = studentRepo.findByEmail(email);
+        if (optionalStudent.isPresent()) {
+            Student student = optionalStudent.get();
+            if (passwordEncoder.matches(rawPassword, student.getPassword())) {
+                return student;
+            }
+        }
+        return null;
     }
 
-    public Student registerStudent(Student student) {
+    public Student saveStudent(Student student) {
+        // Hash password before saving
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
         return studentRepo.save(student);
     }
 

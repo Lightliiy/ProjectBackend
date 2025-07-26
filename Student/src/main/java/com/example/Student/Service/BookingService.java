@@ -35,6 +35,11 @@ public class BookingService {
         return bookingRepo.findById(id);
     }
 
+    public List<Booking> getBookingsByCounselorId(String counselorId) {
+        return bookingRepo.findByCounselorId(counselorId);
+    }
+
+
     public Booking updateBooking(Long id, Booking updatedBooking) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);
         if (optionalBooking.isPresent()) {

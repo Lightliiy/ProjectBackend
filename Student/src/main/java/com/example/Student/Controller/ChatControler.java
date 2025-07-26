@@ -78,4 +78,14 @@ public class ChatControler {
         return ResponseEntity.status(201).body(message);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteChat(@PathVariable Long id) {
+        try {
+            chatService.deleteChat(id);
+            return ResponseEntity.ok("Chat deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Delete failed: " + e.getMessage());
+        }
+    }
+
 }
