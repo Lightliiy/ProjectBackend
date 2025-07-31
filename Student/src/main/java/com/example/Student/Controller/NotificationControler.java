@@ -55,4 +55,15 @@ public class NotificationControler {
         }
     }
 
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<String> deleteNotification(@PathVariable Long notificationId) {
+        boolean deleted = notificationService.deleteNotification(notificationId);
+        if (deleted) {
+            return ResponseEntity.ok("Notification deleted successfully");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 }

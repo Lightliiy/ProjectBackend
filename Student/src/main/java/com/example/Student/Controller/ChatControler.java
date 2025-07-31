@@ -26,7 +26,6 @@ public class ChatControler {
         return ResponseEntity.ok(chats);
     }
 
-    // Get or create chat between counselor and student
     @GetMapping("/between")
     public ResponseEntity<Chat> getOrCreateChat(
             @RequestParam Long counselorId,

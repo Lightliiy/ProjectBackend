@@ -27,6 +27,11 @@ public class BookingService {
         return bookingRepo.findAll();
     }
 
+    public int countBookingsByCounselor(String counselorId) {
+        return bookingRepo.countByCounselorId(counselorId);
+    }
+
+
     public List<Booking> getBookingsByStudent(String studentId) {
         return bookingRepo.findByStudentId(studentId);
     }
@@ -92,12 +97,13 @@ public class BookingService {
     }
 
     public Booking cancelBooking(Long id) {
-        Optional<Booking> booking = bookingRepo.findById(id);
-        if (booking.isPresent()) {
-            booking.get().setStatus(BookingStatus.CANCEL);
-            return bookingRepo.save(booking.get());
-        }
-        return null;
+        return bookingRepo.findById(id)
+                .map(b -> {
+                    b.setStatus(BookingStatus.CANCELLED);
+                    return bookingRepo.save(b);
+                })
+                .orElse(null);
     }
+
 
 }

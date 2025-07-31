@@ -4,14 +4,14 @@ import com.example.Student.Model.BookingStatus;
 import com.example.Student.Model.Case;
 
 import com.example.Student.Model.Head;
-import com.example.Student.Service.CaseService;
-import com.example.Student.Service.HeadService;
-import com.example.Student.Service.NotificationService;
+import com.example.Student.Service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/hod")
@@ -25,6 +25,12 @@ public class HeadControler {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private StudentService studentService; // Add this service if you don't have yet
+
+    @Autowired
+    private CounselorService counselorService;
 
     // ✅ Register new Head of Department
     @PostMapping("/register")
@@ -96,11 +102,24 @@ public class HeadControler {
         return ResponseEntity.ok(escalated);
     }
 
-    // ✅ Get cases escalated by HOD to Admin
     @GetMapping("/escalated-to-admin")
     public ResponseEntity<List<Case>> getCasesEscalatedToAdmin() {
         List<Case> cases = caseService.getCasesByStatus(BookingStatus.ESCALATED_TO_ADMIN);
         return ResponseEntity.ok(cases);
+    }
+
+    @GetMapping("/summary-counts")
+    public ResponseEntity<Map<String, Long>> getSummaryCounts() {
+        long totalStudents = studentService.countAllStudents();
+        long totalCounselors = counselorService.countAllCounselors();
+        long escalatedToAdminCases = caseService.countCasesByStatus(BookingStatus.ESCALATED_TO_ADMIN);
+
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("totalStudents", totalStudents);
+        counts.put("totalCounselors", totalCounselors);
+        counts.put("escalatedToAdminCases", escalatedToAdminCases);
+
+        return ResponseEntity.ok(counts);
     }
 
 

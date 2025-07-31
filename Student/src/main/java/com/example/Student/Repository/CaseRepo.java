@@ -11,4 +11,7 @@ public interface CaseRepo extends JpaRepository<Case, Long> {
 
     List<Case> findByStatus(BookingStatus status);
 
+    long countByStatus(BookingStatus status);
+
+
 }

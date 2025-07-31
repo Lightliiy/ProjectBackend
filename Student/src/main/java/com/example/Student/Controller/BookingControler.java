@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -83,6 +84,12 @@ public class BookingControler {
     public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
         bookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/counselor/{id}/count")
+    public ResponseEntity<Map<String, Integer>> getBookingCount(@PathVariable String id) {
+        int count = bookingService.countBookingsByCounselor(id);
+        return ResponseEntity.ok(Map.of("count", count));
     }
 
     @PutMapping("/{id}/approve")

@@ -39,6 +39,12 @@ public class CounselorControler {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCounselor);
     }
 
+    @GetMapping("/{id}/studentCount")
+    public ResponseEntity<Map<String, Integer>> getStudentCount(@PathVariable Long id) {
+        int count = counselorService.countAssignedStudents(id);
+        return ResponseEntity.ok(Map.of("count", count));
+    }
+
     @PostMapping("/{id}/slots/add")
     public ResponseEntity<?> addAvailableSlots(@PathVariable Long id, @RequestBody List<String> newSlots) {
         Optional<Counselor> optionalCounselor = counselorService.getCounselorById(id);
@@ -112,10 +118,27 @@ public class CounselorControler {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/update/{id}")
-    public Counselor updateCounselor(@PathVariable Long id, @RequestBody Counselor counselor) {
-        return counselorService.updateCounselor(id, counselor);
+    @PutMapping("/reset-password")
+    public ResponseEntity<?> resetPasswordByEmail(@RequestBody Map<String, String> updates) {
+        try {
+            String email = updates.get("email");
+            String newPassword = updates.get("password");
+
+            Optional<Counselor> optionalCounselor = counselorRepo.findByEmail(email);
+            if (optionalCounselor.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Counselor not found"));
+            }
+
+            Counselor counselor = optionalCounselor.get();
+            counselor.setPassword(newPassword); // this should get hashed in your service
+            counselorService.updateCounselor(counselor.getId(), counselor);
+
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
     }
+
 
     @DeleteMapping("/delete/{id}")
     public void deleteCounselor(@PathVariable Long id) {

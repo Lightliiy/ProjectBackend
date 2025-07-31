@@ -42,6 +42,15 @@ public class CaseService {
         return caseRepo.findByStatus(BookingStatus.ESCALATED);
     }
 
+    public long countAllCases() {
+        return caseRepo.count();
+    }
+
+    public long countCasesByStatus(BookingStatus status) {
+        return caseRepo.countByStatus(status);
+    }
+
+
 
     // Escalate a case by changing its status
     public Case escalateCase(Long id) {

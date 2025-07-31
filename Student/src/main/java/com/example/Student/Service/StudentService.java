@@ -54,6 +54,10 @@ public class StudentService {
         return studentRepo.findByCounselorId(id);
     }
 
+    public long countAllStudents() {
+        return studentRepo.count();  // assuming you use JpaRepository
+    }
+
     public List<Student> getStudentsByCounselorEmail(String email) {
         return studentRepo.findByCounselorEmail(email);
     }

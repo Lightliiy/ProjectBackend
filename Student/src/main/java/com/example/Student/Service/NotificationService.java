@@ -45,5 +45,16 @@ public class NotificationService {
         return false;
     }
 
+    public boolean deleteNotification(Long notificationId) {
+        Optional<Notification> notificationOpt = notificationRepo.findById(notificationId);
+        if (notificationOpt.isPresent()) {
+            notificationRepo.deleteById(notificationId);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
 
 }

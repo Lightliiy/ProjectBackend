@@ -2,6 +2,7 @@ package com.example.Student.Service;
 
 import com.example.Student.Model.Counselor;
 import com.example.Student.Repository.CounselorRepo;
+import com.example.Student.Repository.StudentRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,9 @@ public class CounselorService {
 
     @Autowired
     private CounselorRepo counselorRepo;
+
+    @Autowired
+    private StudentRepo studentRepo;
 
 
     @Autowired
@@ -29,6 +33,15 @@ public class CounselorService {
 
     public Optional<Counselor> getCounselorById(Long id) {
         return counselorRepo.findById(id);
+    }
+
+    public int countAssignedStudents(Long counselorId) {
+        // Assuming Student entity has a field 'counselorId'
+        return studentRepo.countByCounselorId(counselorId);
+    }
+
+    public long countAllCounselors() {
+        return counselorRepo.count();  // assuming you use JpaRepository
     }
 
     public Counselor addCounselor(Counselor counselor) {
