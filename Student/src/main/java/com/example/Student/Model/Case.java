@@ -17,6 +17,9 @@ public class Case {
 
     private Long counselorId;
 
+    @ManyToOne
+    private Booking booking;
+
     public Long getCounselorId() {
         return counselorId;
     }

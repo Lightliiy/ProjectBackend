@@ -6,6 +6,8 @@ import com.example.Student.Model.Message;
 import com.example.Student.Repository.ChatRepo;
 import com.example.Student.Repository.CounselorRepo;
 import com.example.Student.Repository.MessageRepo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +23,36 @@ public class ChatService {
     private final CounselorRepo counselorRepo;
     private final MessageRepo messageRepo;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     public ChatService(ChatRepo chatRepo, CounselorRepo counselorRepo, MessageRepo messageRepo) {
         this.chatRepo = chatRepo;
         this.counselorRepo = counselorRepo;
         this.messageRepo = messageRepo;
+    }
+
+    public List<Chat> getChatsByStudentIdAndCounselorId(String studentId, Long counselorId) {
+        return chatRepo.findByStudentIdAndCounselorId(studentId, counselorId);
+    }
+
+
+    public List<Chat> getChatsByStudentId(String studentId) {
+        return chatRepo.findByStudentId(studentId);
+    }
+
+    public Message saveMessage(Message message) {
+        // Set timestamp if missing
+        if (message.getTimestamp() == null) {
+            message.setTimestamp(LocalDateTime.now());
+        }
+
+        // Ensure chat is attached
+        Chat chat = chatRepo.findById(message.getChat().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Chat not found with id: " + message.getChat().getId()));
+        message.setChat(chat);
+
+        return messageRepo.save(message);
     }
 
     public List<Chat> getAllChats() {
@@ -43,6 +71,7 @@ public class ChatService {
         return chats;
     }
 
+
     // Create or get existing chat between counselor and student
     @Transactional
     public Chat getOrCreateChat(Long counselorId, String studentId, String counselorName) {
@@ -56,11 +85,13 @@ public class ChatService {
                 });
     }
 
+
     public List<Message> getMessages(Long chatId) {
-        return messageRepo.findByChatIdOrderByTimestampAsc(chatId);
+        return messageRepo.findByChat_IdOrderByTimestampAsc(chatId);
     }
 
-    public Message sendMessage(Long chatId, String senderId, String content, String attachmentUrl, Long counselorId, String studentId, String counselorName) {
+    public Message sendMessage(Long chatId, String senderId, String content, String attachmentUrl,
+                               Long counselorId, String studentId, String counselorName) {
         Chat chat = chatRepo.findById(chatId).orElse(null);
 
         if (chat == null) {
@@ -77,8 +108,14 @@ public class ChatService {
         message.setAttachmentUrl(attachmentUrl);
         message.setTimestamp(LocalDateTime.now());
 
-        return messageRepo.save(message);
+        Message savedMessage = messageRepo.save(message);
+
+        // 🔔 Broadcast via WebSocket to all listeners of /topic/chat.{chatId}
+        messagingTemplate.convertAndSend("/topic/chat/" + chatId, savedMessage);
+
+        return savedMessage;
     }
+
 
     public void deleteChat(Long id) throws Exception {
         boolean exists = chatRepo.existsById(id);

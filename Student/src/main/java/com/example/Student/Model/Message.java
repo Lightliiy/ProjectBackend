@@ -1,6 +1,7 @@
 package com.example.Student.Model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -13,8 +14,8 @@ public class Message {
     private Long id;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "chat_id")
+    @JsonIgnore
     private Chat chat;
 
     private String senderId;  // who sent the message (counselor or student)
@@ -24,6 +25,9 @@ public class Message {
     private LocalDateTime timestamp = LocalDateTime.now();
 
     private String attachmentUrl;
+
+    @Transient
+    private Long chatId;
 
     public Long getId() {
         return id;
@@ -71,5 +75,13 @@ public class Message {
 
     public void setAttachmentUrl(String attachmentUrl) {
         this.attachmentUrl = attachmentUrl;
+    }
+
+    public Long getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 }

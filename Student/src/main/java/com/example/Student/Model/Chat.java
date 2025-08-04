@@ -18,6 +18,7 @@ public class Chat {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Message> messages;

@@ -50,6 +50,15 @@ public class CaseService {
         return caseRepo.countByStatus(status);
     }
 
+    public Case escalateToHODByBookingId(Long bookingId) {
+        Optional<Case> caseOptional = caseRepo.findByBooking_Id(bookingId);
+        if (caseOptional.isPresent()) {
+            Case caseItem = caseOptional.get();
+            caseItem.setStatus(BookingStatus.ESCALATED_TO_HOD);
+            return caseRepo.save(caseItem);
+        }
+        return null;
+    }
 
 
     // Escalate a case by changing its status

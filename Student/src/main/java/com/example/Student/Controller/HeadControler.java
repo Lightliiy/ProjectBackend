@@ -70,18 +70,16 @@ public class HeadControler {
     }
 
     // ✅ Escalate case by ID
-    @PostMapping("/escalate-case/{id}")
-    public ResponseEntity<Case> escalateCase(@PathVariable Long id) {
-        Case escalated = caseService.escalateCase(id);
+    @PostMapping("/escalate-case/booking/{bookingId}")
+    public ResponseEntity<Case> escalateCaseByBooking(@PathVariable Long bookingId) {
+        Case escalated = caseService.escalateToHODByBookingId(bookingId);
         if (escalated == null) {
             return ResponseEntity.notFound().build();
         }
-
-        // (Optional) send notification to admin here
-        // notificationService.sendNotification(...);
-
         return ResponseEntity.ok(escalated);
     }
+
+
     @PostMapping("/reassign-counselor")
     public ResponseEntity<String> reassignCounselor(
             @RequestParam Long caseId,

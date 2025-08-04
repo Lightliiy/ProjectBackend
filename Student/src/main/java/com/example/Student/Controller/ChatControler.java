@@ -1,22 +1,38 @@
 package com.example.Student.Controller;
 
 import com.example.Student.Model.Chat;
+import com.example.Student.Model.Counselor;
 import com.example.Student.Model.Message;
+import com.example.Student.Model.Student;
+import com.example.Student.Repository.ChatRepo;
 import com.example.Student.Service.ChatService;
+import com.example.Student.Service.StudentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/chats")
 public class ChatControler {
 
+    private ChatRepo chatRepo;
+
     private final ChatService chatService;
 
-    public ChatControler(ChatService chatService) {
+    private StudentService studentService;
+    private static final Logger logger = LoggerFactory.getLogger(ChatControler.class);
+
+    public ChatControler(ChatService chatService, StudentService studentService, ChatRepo chatRepo) {
         this.chatService = chatService;
+        this.chatRepo = chatRepo;
+        this.studentService = studentService;
     }
 
     // Get all chats
@@ -26,14 +42,55 @@ public class ChatControler {
         return ResponseEntity.ok(chats);
     }
 
+    @GetMapping("/assigned")
+    public ResponseEntity<List<Chat>> getChatsForAssignedCounselor(@RequestParam String studentId) {
+        try {
+            Student student = studentService.findByStudentId(studentId);
+            if (student == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Counselor counselor = student.getCounselor();
+            if (counselor == null) {
+                return ResponseEntity.ok(List.of()); // no assigned counselor
+            }
+
+            List<Chat> chats = chatService.getChatsByStudentIdAndCounselorId(studentId, counselor.getId());
+            return ResponseEntity.ok(chats);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // Get chats by student ID
+    @GetMapping
+    public ResponseEntity<List<Chat>> getChatsByStudentId(@RequestParam String studentId) {
+        List<Chat> chats = chatService.getChatsByStudentId(studentId);
+        return ResponseEntity.ok(chats);
+    }
+
+    // Get or create chat between counselor and student
     @GetMapping("/between")
     public ResponseEntity<Chat> getOrCreateChat(
             @RequestParam Long counselorId,
             @RequestParam String studentId,
-            @RequestParam(required = false) String counselorName) {
-        Chat chat = chatService.getOrCreateChat(counselorId, studentId, counselorName);
-        return ResponseEntity.ok(chat);
+            @RequestParam String counselorName
+    ) {
+        Optional<Chat> existingChat = chatRepo.findByCounselorIdAndStudentId(counselorId, studentId);
+        if (existingChat.isPresent()) {
+            return ResponseEntity.ok(existingChat.get());
+        }
+
+        Chat newChat = new Chat();
+        newChat.setCounselorId(counselorId);
+        newChat.setStudentId(studentId);
+        newChat.setCounselorName(counselorName);
+        newChat.setCreatedAt(LocalDateTime.now());
+
+        Chat saved = chatRepo.save(newChat);
+        return ResponseEntity.ok(saved);
     }
+
 
     // Get messages in a specific chat
     @GetMapping("/{chatId}/messages")
@@ -44,47 +101,52 @@ public class ChatControler {
 
     // Send a message
     @PostMapping("/{chatId}/messages")
-    public ResponseEntity<Message> sendMessage(
+    public ResponseEntity<?> sendMessage(
             @PathVariable Long chatId,
             @RequestBody Map<String, Object> payload) {
+        try {
+            String senderId = payload.get("senderId").toString();
+            String content = payload.get("content").toString();
+            String attachmentUrl = payload.containsKey("attachmentUrl") && payload.get("attachmentUrl") != null
+                    ? payload.get("attachmentUrl").toString()
+                    : null;
 
-        String senderId = payload.get("senderId").toString();
-        String content = payload.get("content").toString();
-        String attachmentUrl = payload.containsKey("attachmentUrl") && payload.get("attachmentUrl") != null
-                ? payload.get("attachmentUrl").toString()
-                : null;
+            Long counselorId = payload.containsKey("counselorId") && payload.get("counselorId") != null
+                    ? Long.valueOf(payload.get("counselorId").toString())
+                    : null;
 
-        Long counselorId = payload.containsKey("counselorId") && payload.get("counselorId") != null
-                ? Long.valueOf(payload.get("counselorId").toString())
-                : null;
+            String studentId = payload.containsKey("studentId") && payload.get("studentId") != null
+                    ? payload.get("studentId").toString()
+                    : null;
 
-        String studentId = payload.containsKey("studentId") && payload.get("studentId") != null
-                ? payload.get("studentId").toString()
-                : null;
+            String counselorName = payload.containsKey("counselorName") ? payload.get("counselorName").toString() : null;
 
-        String counselorName = payload.containsKey("counselorName") ? payload.get("counselorName").toString() : null;
+            Message message = chatService.sendMessage(
+                    chatId,
+                    senderId,
+                    content,
+                    attachmentUrl,
+                    counselorId,
+                    studentId,
+                    counselorName
+            );
 
-        Message message = chatService.sendMessage(
-                chatId,
-                senderId,
-                content,
-                attachmentUrl,
-                counselorId,
-                studentId,
-                counselorName
-        );
-
-        return ResponseEntity.status(201).body(message);
+            return ResponseEntity.status(201).body(message);
+        } catch (Exception e) {
+            logger.error("Error sending message in chatId={}: {}", chatId, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Failed to send message");
+        }
     }
 
+    // Delete chat by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteChat(@PathVariable Long id) {
         try {
             chatService.deleteChat(id);
             return ResponseEntity.ok("Chat deleted successfully");
         } catch (Exception e) {
+            logger.error("Error deleting chat with id={}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(404).body("Delete failed: " + e.getMessage());
         }
     }
-
 }

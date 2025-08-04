@@ -11,5 +11,10 @@ public interface ChatRepo extends JpaRepository<Chat, Long> {
 
     List<Chat> findByStudentId(String studentId);
 
+    List<Chat> findByStudentIdAndCounselorId(String studentId, Long counselorId);
+
+    Optional<Chat> findById(Long id);
+
+
 }
 
