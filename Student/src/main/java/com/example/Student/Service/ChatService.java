@@ -42,18 +42,14 @@ public class ChatService {
     }
 
     public Message saveMessage(Message message) {
-        // Set timestamp if missing
-        if (message.getTimestamp() == null) {
-            message.setTimestamp(LocalDateTime.now());
+        // Make sure chat entity is properly linked before saving
+        if (message.getChat() != null && message.getChat().getId() != null) {
+            // Optionally fetch Chat entity from DB if needed
         }
-
-        // Ensure chat is attached
-        Chat chat = chatRepo.findById(message.getChat().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Chat not found with id: " + message.getChat().getId()));
-        message.setChat(chat);
-
+        message.setTimestamp(LocalDateTime.now());
         return messageRepo.save(message);
     }
+
 
     public List<Chat> getAllChats() {
         List<Chat> chats = chatRepo.findAll();

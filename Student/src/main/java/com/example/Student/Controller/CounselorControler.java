@@ -6,6 +6,7 @@ import com.example.Student.Service.CounselorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -17,6 +18,9 @@ public class CounselorControler {
 
     @Autowired
     private CounselorService counselorService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CounselorRepo counselorRepo;
@@ -122,20 +126,55 @@ public class CounselorControler {
     public ResponseEntity<?> resetPasswordByEmail(@RequestBody Map<String, String> updates) {
         try {
             String email = updates.get("email");
-            String newPassword = updates.get("password");
+            String currentPassword = updates.get("currentPassword");
+            String newPassword = updates.get("newPassword");
+
+            if (email == null || currentPassword == null || newPassword == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "All fields are required"));
+            }
 
             Optional<Counselor> optionalCounselor = counselorRepo.findByEmail(email);
             if (optionalCounselor.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Counselor not found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Counselor not found"));
             }
 
             Counselor counselor = optionalCounselor.get();
-            counselor.setPassword(newPassword); // this should get hashed in your service
+
+            // Check if current password matches
+            if (!passwordEncoder.matches(currentPassword, counselor.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Current password is incorrect"));
+            }
+
+            counselor.setPassword(passwordEncoder.encode(newPassword));
             counselorService.updateCounselor(counselor.getId(), counselor);
 
             return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An error occurred: " + e.getMessage()));
+        }
+    }
+
+
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateCounselor(
+            @PathVariable Long id,
+            @RequestBody Counselor updatedCounselor) {
+
+        try {
+            Counselor counselor = counselorService.updateCounselor(id, updatedCounselor);
+            return ResponseEntity.ok(counselor);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An error occurred"));
         }
     }
 

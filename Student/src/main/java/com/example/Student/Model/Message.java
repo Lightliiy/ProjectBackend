@@ -26,8 +26,6 @@ public class Message {
 
     private String attachmentUrl;
 
-    @Transient
-    private Long chatId;
 
     public Long getId() {
         return id;
@@ -78,10 +76,10 @@ public class Message {
     }
 
     public Long getChatId() {
-        return chatId;
+        if (chat != null) {
+            return chat.getId();
+        }
+        return null;
     }
 
-    public void setChatId(Long chatId) {
-        this.chatId = chatId;
-    }
 }

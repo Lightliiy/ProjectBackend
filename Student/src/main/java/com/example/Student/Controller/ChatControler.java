@@ -76,20 +76,24 @@ public class ChatControler {
             @RequestParam String studentId,
             @RequestParam String counselorName
     ) {
+        // Try to find existing chat for the counselor-student pair
         Optional<Chat> existingChat = chatRepo.findByCounselorIdAndStudentId(counselorId, studentId);
+
         if (existingChat.isPresent()) {
             return ResponseEntity.ok(existingChat.get());
         }
 
+        // If not found, create a new chat
         Chat newChat = new Chat();
         newChat.setCounselorId(counselorId);
         newChat.setStudentId(studentId);
         newChat.setCounselorName(counselorName);
-        newChat.setCreatedAt(LocalDateTime.now());
+        Chat savedChat = chatRepo.save(newChat);
 
-        Chat saved = chatRepo.save(newChat);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(savedChat);
     }
+
+
 
 
     // Get messages in a specific chat

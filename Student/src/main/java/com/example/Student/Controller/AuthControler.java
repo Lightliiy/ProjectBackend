@@ -52,22 +52,26 @@ public class AuthControler {
         String email = credentials.get("email");
         String password = credentials.get("password");
 
+        System.out.println("Login attempt for email: " + email);
+
         if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
             return ResponseEntity.badRequest().body("Email and password are required.");
         }
 
-        Counselor counselor =
-                counselorService.authenticate(email, password);
+        Counselor counselor = counselorService.authenticate(email, password);
         if (counselor != null) {
+            System.out.println("Counselor login successful for " + email);
             return ResponseEntity.ok(Map.of(
                     "user", counselor,
                     "role", "COUNSELOR"
             ));
+        } else {
+            System.out.println("Counselor login failed for " + email);
         }
 
         StaffUser staffUser = staffService.authenticate(email, password);
-
         if (staffUser != null) {
+            System.out.println("Staff login successful for " + email);
             String userRole = (staffUser.getRoles() != null && !staffUser.getRoles().isEmpty())
                     ? staffUser.getRoles().iterator().next()
                     : "";
@@ -76,16 +80,20 @@ public class AuthControler {
                     "user", staffUser,
                     "role", userRole
             ));
+        } else {
+            System.out.println("Staff login failed for " + email);
         }
-
 
         Student user = userServices.authenticate(email, password);
         if (user != null) {
+            System.out.println("Student login successful for " + email);
             return ResponseEntity.ok(user);
         } else {
+            System.out.println("Student login failed for " + email);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         }
     }
+
 
     @PostMapping("/register-staff")
     public ResponseEntity<?> registerStaff(@RequestBody StaffUser staffUser) {

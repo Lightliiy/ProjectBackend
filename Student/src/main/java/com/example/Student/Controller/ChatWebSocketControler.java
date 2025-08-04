@@ -22,20 +22,14 @@ public class ChatWebSocketControler {
 
     @MessageMapping("/chat/send")
     public void receiveMessage(Message message) {
-        // Ensure Chat is attached
         if (message.getChat() == null && message.getChatId() != null) {
             Chat chat = new Chat();
             chat.setId(message.getChatId());
             message.setChat(chat);
         }
-
-        // Save the message (you must implement this in ChatService)
-        Message savedMessage = chatService.saveMessage(message);
-
-        // Broadcast to subscribers
-        messagingTemplate.convertAndSend(
-                "/topic/chat/" + savedMessage.getChat().getId(),
-                savedMessage
-        );
+        Message saved = chatService.saveMessage(message);
+        messagingTemplate.convertAndSend("/topic/chat/" + saved.getChat().getId(), saved);
     }
+
+
 }

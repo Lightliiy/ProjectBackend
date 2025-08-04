@@ -4,6 +4,7 @@ import com.example.Student.Model.Counselor;
 import com.example.Student.Repository.CounselorRepo;
 import com.example.Student.Repository.StudentRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -110,12 +111,17 @@ public class CounselorService {
         Optional<Counselor> optionalCounselor = counselorRepo.findByEmail(email);
         if (optionalCounselor.isPresent()) {
             Counselor counselor = optionalCounselor.get();
-            if (passwordEncoder.matches(rawPassword, counselor.getPassword())) {
+            System.out.println("Stored hash: " + counselor.getPassword());
+            System.out.println("Trying to match raw password: " + rawPassword);
+            boolean matches = passwordEncoder.matches(rawPassword, counselor.getPassword());
+            System.out.println("Password match result: " + matches);
+            if (matches) {
                 return counselor;
             }
         }
         return null;
     }
+
 
 
 

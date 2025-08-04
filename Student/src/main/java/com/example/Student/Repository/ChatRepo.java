@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface ChatRepo extends JpaRepository<Chat, Long> {
     Optional<Chat> findByCounselorIdAndStudentId(Long counselorId, String studentId);
 
+
+
     List<Chat> findByStudentId(String studentId);
 
     List<Chat> findByStudentIdAndCounselorId(String studentId, Long counselorId);
