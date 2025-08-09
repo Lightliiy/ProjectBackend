@@ -2,6 +2,7 @@ package com.example.Student.Service;
 
 import com.example.Student.Model.Booking;
 import com.example.Student.Model.BookingStatus;
+import com.example.Student.Model.Student;
 import com.example.Student.Repository.BookingRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,19 +19,31 @@ public class BookingService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private StudentService studentService;
+
     public Booking createBooking(Booking booking) {
-        booking.setStatus(BookingStatus.PENDING); // default status on create
+        booking.setStatus(BookingStatus.PENDING);
         return bookingRepo.save(booking);
     }
 
     public List<Booking> getAllBookings() {
-        return bookingRepo.findAll();
+        List<Booking> bookings = bookingRepo.findAll();
+
+        for (Booking booking : bookings) {
+            studentService.findByStudentId(booking.getStudentId())
+                    .ifPresentOrElse(
+                            student -> booking.setStudentName(student.getName()),
+                            () -> booking.setStudentName("N/A")
+                    );
+        }
+
+        return bookings;
     }
 
     public int countBookingsByCounselor(String counselorId) {
         return bookingRepo.countByCounselorId(counselorId);
     }
-
 
     public List<Booking> getBookingsByStudent(String studentId) {
         return bookingRepo.findByStudentId(studentId);
@@ -41,9 +54,20 @@ public class BookingService {
     }
 
     public List<Booking> getBookingsByCounselorId(String counselorId) {
-        return bookingRepo.findByCounselorId(counselorId);
-    }
+        List<Booking> bookings = bookingRepo.findByCounselorId(counselorId);
 
+        for (Booking booking : bookings) {
+
+            Optional<Student> studentOptional = studentService.findByStudentId(booking.getStudentId());
+            if (studentOptional.isPresent()) {
+                Student student = studentOptional.get();
+                booking.setStudentName(student.getName());
+            } else {
+                booking.setStudentName("Unknown Student");
+            }
+        }
+        return bookings;
+    }
 
     public Booking updateBooking(Long id, Booking updatedBooking) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);
@@ -58,8 +82,9 @@ public class BookingService {
         return null;
     }
 
-    public void deleteBooking(Long id) {
-        bookingRepo.deleteById(id);
+    // Updated deleteBooking method: no longer references CaseRepo
+    public void deleteBooking(Long bookingId) {
+        bookingRepo.deleteById(bookingId);
     }
 
     public Booking createBookings(Booking booking) {
@@ -74,7 +99,6 @@ public class BookingService {
 
         return savedBooking;
     }
-
 
     public Booking approveBooking(Long id) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);
@@ -104,6 +128,4 @@ public class BookingService {
                 })
                 .orElse(null);
     }
-
-
 }

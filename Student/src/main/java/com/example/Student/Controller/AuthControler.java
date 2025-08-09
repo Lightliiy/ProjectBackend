@@ -100,11 +100,15 @@ public class AuthControler {
         try {
             StaffUser createdUser = staffService.register(staffUser);
             return ResponseEntity.ok(Map.of("message", "Staff user registered successfully", "user", createdUser));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "Failed to register staff user", "error", e.getMessage()));
         }
     }
+
 
 
 }

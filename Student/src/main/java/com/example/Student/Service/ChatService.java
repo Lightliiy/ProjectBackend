@@ -23,6 +23,10 @@ public class ChatService {
     private final CounselorRepo counselorRepo;
     private final MessageRepo messageRepo;
 
+//    @Autowired
+//    private AgoraTokenService agoraTokenService;
+
+
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -32,7 +36,7 @@ public class ChatService {
         this.messageRepo = messageRepo;
     }
 
-    public List<Chat> getChatsByStudentIdAndCounselorId(String studentId, Long counselorId) {
+    public List<Chat> getChatsByStudentIdAndCounselorId(String studentId, String counselorId) {
         return chatRepo.findByStudentIdAndCounselorId(studentId, counselorId);
     }
 
@@ -70,7 +74,7 @@ public class ChatService {
 
     // Create or get existing chat between counselor and student
     @Transactional
-    public Chat getOrCreateChat(Long counselorId, String studentId, String counselorName) {
+    public Chat getOrCreateChat(String counselorId, String studentId, String counselorName) {
         return chatRepo.findByCounselorIdAndStudentId(counselorId, studentId)
                 .orElseGet(() -> {
                     Chat chat = new Chat();
@@ -87,7 +91,7 @@ public class ChatService {
     }
 
     public Message sendMessage(Long chatId, String senderId, String content, String attachmentUrl,
-                               Long counselorId, String studentId, String counselorName) {
+                               String counselorId, String studentId, String counselorName) {
         Chat chat = chatRepo.findById(chatId).orElse(null);
 
         if (chat == null) {
@@ -111,6 +115,20 @@ public class ChatService {
 
         return savedMessage;
     }
+
+    public void initiateVideoCall(Long counselorId, String studentId, String token) {
+        String channelName = "chat-" + counselorId + "-" + studentId;
+
+        Map<String, Object> callPayload = Map.of(
+                "channelName", channelName,
+                "token", token,
+                "counselorId", counselorId
+        );
+
+        // Send to student subscribed to /topic/video/{studentId}
+        messagingTemplate.convertAndSend("/topic/video/" + studentId, callPayload);
+    }
+
 
 
     public void deleteChat(Long id) throws Exception {

@@ -19,6 +19,11 @@ public class StaffService {
 
     // Register a new staff user (Admin or HOD)
     public StaffUser register(StaffUser staffUser) {
+        // Check for duplicate email
+        if (staffRepo.existsByEmail(staffUser.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+
         // Hash the password before saving
         staffUser.setPassword(passwordEncoder.encode(staffUser.getPassword()));
         return staffRepo.save(staffUser);
@@ -36,4 +41,3 @@ public class StaffService {
         return null;
     }
 }
-

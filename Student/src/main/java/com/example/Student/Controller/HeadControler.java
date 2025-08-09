@@ -1,10 +1,13 @@
 package com.example.Student.Controller;
 
+import com.example.Student.Model.Booking;
 import com.example.Student.Model.BookingStatus;
-import com.example.Student.Model.Case;
-
 import com.example.Student.Model.Head;
-import com.example.Student.Service.*;
+import com.example.Student.Repository.BookingRepo;
+import com.example.Student.Service.CounselorService;
+import com.example.Student.Service.HeadService;
+import com.example.Student.Service.NotificationService;
+import com.example.Student.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/hod")
@@ -21,13 +25,17 @@ public class HeadControler {
     private HeadService headOfDepartmentService;
 
     @Autowired
-    private CaseService caseService;
+    private BookingRepo bookingRepo;
+
+    // The CaseService is no longer needed
+    // @Autowired
+    // private CaseService caseService;
 
     @Autowired
     private NotificationService notificationService;
 
     @Autowired
-    private StudentService studentService; // Add this service if you don't have yet
+    private StudentService studentService;
 
     @Autowired
     private CounselorService counselorService;
@@ -39,86 +47,92 @@ public class HeadControler {
         return ResponseEntity.ok(savedHod);
     }
 
-    // ✅ View all cases
-    @GetMapping("/all-cases")
-    public ResponseEntity<List<Case>> getAllCases() {
-        List<Case> allCases = caseService.getAllCases();  // <-- You must implement this in service
-        return ResponseEntity.ok(allCases);
+    // ✅ View all bookings (no longer cases)
+    @GetMapping("/all-bookings")
+    public ResponseEntity<List<Booking>> getAllBookings() {
+        List<Booking> allBookings = bookingRepo.findAll();
+        return ResponseEntity.ok(allBookings);
     }
 
-
-    // ✅ View escalated cases
-    @GetMapping("/escalated-cases")
-    public ResponseEntity<List<Case>> getEscalatedCases() {
-        List<Case> escalatedCases = caseService.getEscalatedCases();
-        return ResponseEntity.ok(escalatedCases);
+    // ✅ View escalated bookings (no longer cases)
+    @GetMapping("/escalated-bookings")
+    public ResponseEntity<List<Booking>> getEscalatedBookings() {
+        List<Booking> escalatedBookings = bookingRepo.findByStatus(BookingStatus.ESCALATED_TO_HOD);
+        return ResponseEntity.ok(escalatedBookings);
     }
 
-    // ✅ View pending cases
-    @GetMapping("/pending-cases")
-    public ResponseEntity<List<Case>> getPendingCases() {
-        List<Case> pendingCases = caseService.getPendingCases();
-        return ResponseEntity.ok(pendingCases);
+    // ✅ View pending bookings (no longer cases)
+    @GetMapping("/pending-bookings")
+    public ResponseEntity<List<Booking>> getPendingBookings() {
+        List<Booking> pendingBookings = bookingRepo.findByStatus(BookingStatus.PENDING);
+        return ResponseEntity.ok(pendingBookings);
     }
 
-    // ✅ Register new case (always defaults to PENDING)
-    @PostMapping("/add-case")
-    public ResponseEntity<Case> addCase(@RequestBody Case caseItem) {
-        caseItem.setStatus(BookingStatus.PENDING); // enforce default
-        Case savedCase = caseService.saveCase(caseItem);
-        return ResponseEntity.ok(savedCase);
-    }
-
-    // ✅ Escalate case by ID
-    @PostMapping("/escalate-case/booking/{bookingId}")
-    public ResponseEntity<Case> escalateCaseByBooking(@PathVariable Long bookingId) {
-        Case escalated = caseService.escalateToHODByBookingId(bookingId);
-        if (escalated == null) {
-            return ResponseEntity.notFound().build();
+    // ✅ Escalate booking to HOD
+    @PostMapping("/escalate-to-hod/{bookingId}")
+    public ResponseEntity<Booking> escalateToHOD(@PathVariable Long bookingId) {
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            booking.setStatus(BookingStatus.ESCALATED_TO_HOD);
+            Booking savedBooking = bookingRepo.save(booking);
+            return ResponseEntity.ok(savedBooking);
         }
-        return ResponseEntity.ok(escalated);
+        return ResponseEntity.notFound().build();
     }
 
+    // ✅ Escalate booking to Admin
+    @PostMapping("/escalate-to-admin/{bookingId}")
+    public ResponseEntity<Booking> escalateToAdmin(
+            @PathVariable Long bookingId,
+            @RequestParam String hodComment) {
 
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            booking.setStatus(BookingStatus.ESCALATED_TO_ADMIN);
+            booking.setHodComment(hodComment);
+            return ResponseEntity.ok(bookingRepo.save(booking));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // ✅ Reassign a counselor to a booking
     @PostMapping("/reassign-counselor")
     public ResponseEntity<String> reassignCounselor(
-            @RequestParam Long caseId,
+            @RequestParam Long bookingId, // Change to bookingId
             @RequestParam Long counselorId
     ) {
-        caseService.reassignCounselor(caseId, counselorId);
-        return ResponseEntity.ok("Reassigned");
-    }
-
-
-    @PostMapping("/escalate-to-admin/{id}") // HOD escalates to admin
-    public ResponseEntity<Case> escalateToAdmin(@PathVariable Long id) {
-        Case escalated = caseService.escalateToAdmin(id);
-        if (escalated == null) {
-            return ResponseEntity.notFound().build();
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            // Assuming the booking object has a way to set counselorId
+            booking.setCounselorId(String.valueOf(counselorId));
+            bookingRepo.save(booking);
+            return ResponseEntity.ok("Counselor reassigned successfully.");
         }
-        // Optional: notify admin here
-        return ResponseEntity.ok(escalated);
+        return ResponseEntity.notFound().build();
     }
 
+    // ✅ Get bookings escalated to Admin
     @GetMapping("/escalated-to-admin")
-    public ResponseEntity<List<Case>> getCasesEscalatedToAdmin() {
-        List<Case> cases = caseService.getCasesByStatus(BookingStatus.ESCALATED_TO_ADMIN);
-        return ResponseEntity.ok(cases);
+    public ResponseEntity<List<Booking>> getBookingsEscalatedToAdmin() {
+        List<Booking> bookings = bookingRepo.findByStatus(BookingStatus.ESCALATED_TO_ADMIN);
+        return ResponseEntity.ok(bookings);
     }
 
+    // ✅ Get summary counts
     @GetMapping("/summary-counts")
     public ResponseEntity<Map<String, Long>> getSummaryCounts() {
         long totalStudents = studentService.countAllStudents();
         long totalCounselors = counselorService.countAllCounselors();
-        long escalatedToAdminCases = caseService.countCasesByStatus(BookingStatus.ESCALATED_TO_ADMIN);
+        long escalatedToAdminBookings = bookingRepo.countByStatus(BookingStatus.ESCALATED_TO_ADMIN);
 
         Map<String, Long> counts = new HashMap<>();
         counts.put("totalStudents", totalStudents);
         counts.put("totalCounselors", totalCounselors);
-        counts.put("escalatedToAdminCases", escalatedToAdminCases);
+        counts.put("escalatedToAdminBookings", escalatedToAdminBookings);
 
         return ResponseEntity.ok(counts);
     }
-
-
 }

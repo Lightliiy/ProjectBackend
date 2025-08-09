@@ -11,7 +11,7 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long counselorId;
+    private String counselorId;
 
     private String counselorName;// counselor user id
     private String studentId;   // student user id
@@ -41,11 +41,11 @@ public class Chat {
         this.counselorName = counselorName;
     }
 
-    public Long getCounselorId() {
+    public String getCounselorId() {
         return counselorId;
     }
 
-    public void setCounselorId(Long counselorId) {
+    public void setCounselorId(String counselorId) {
         this.counselorId = counselorId;
     }
 

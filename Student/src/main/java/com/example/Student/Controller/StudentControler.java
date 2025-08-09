@@ -1,8 +1,6 @@
 package com.example.Student.Controller;
 
-import com.example.Student.Model.Case;
 import com.example.Student.Model.Student;
-import com.example.Student.Service.CaseService;
 import com.example.Student.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +14,6 @@ public class StudentControler {
 
     @Autowired
     private StudentService studentService;
-
-    @Autowired
-    private CaseService caseService;
 
     @GetMapping
     public List<Student> getAllStudents() {
@@ -35,14 +30,15 @@ public class StudentControler {
         }
     }
 
-    @PostMapping("/escalate-to-hod/{id}")
-    public ResponseEntity<Case> escalateToHOD(@PathVariable Long id) {
-        Case escalated = caseService.escalateToHOD(id);
-        if (escalated == null) {
-            return ResponseEntity.notFound().build();
+    // Add a new method to handle string-based student IDs
+    @GetMapping("/search")
+    public ResponseEntity<Student> getStudentByStudentId(@RequestParam String studentId) {
+        Optional<Student> student = studentService.findByStudentId(studentId);
+        if (student.isPresent()) {
+            return ResponseEntity.ok(student.get());
+        } else {
+            return ResponseEntity.status(404).body(null);
         }
-        // Optionally: notify HOD here
-        return ResponseEntity.ok(escalated);
     }
 
 
@@ -98,6 +94,4 @@ public class StudentControler {
             return ResponseEntity.status(404).body("Delete failed: " + e.getMessage());
         }
     }
-
-
 }

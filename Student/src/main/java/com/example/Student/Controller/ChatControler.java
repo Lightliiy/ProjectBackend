@@ -27,6 +27,7 @@ public class ChatControler {
     private final ChatService chatService;
 
     private StudentService studentService;
+
     private static final Logger logger = LoggerFactory.getLogger(ChatControler.class);
 
     public ChatControler(ChatService chatService, StudentService studentService, ChatRepo chatRepo) {
@@ -45,19 +46,32 @@ public class ChatControler {
     @GetMapping("/assigned")
     public ResponseEntity<List<Chat>> getChatsForAssignedCounselor(@RequestParam String studentId) {
         try {
-            Student student = studentService.findByStudentId(studentId);
-            if (student == null) {
+            // Correct way to handle the Optional return type
+            Optional<Student> optionalStudent = studentService.findByStudentId(studentId);
+
+            if (optionalStudent.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
+            Student student = optionalStudent.get(); // Get the Student object from the Optional
+
             Counselor counselor = student.getCounselor();
             if (counselor == null) {
-                return ResponseEntity.ok(List.of()); // no assigned counselor
+                return ResponseEntity.ok(List.of());
             }
 
-            List<Chat> chats = chatService.getChatsByStudentIdAndCounselorId(studentId, counselor.getId());
+            List<Chat> chats = chatService.getChatsByStudentIdAndCounselorId(studentId, String.valueOf(counselor.getId()));
+
+            // FIX: Add the counselor's name to each Chat object
+            String counselorName = counselor.getName();
+            for (Chat chat : chats) {
+                chat.setCounselorName(counselorName);
+            }
+
             return ResponseEntity.ok(chats);
         } catch (Exception e) {
+            // You should have a logger defined for this to work
+            logger.error("Error fetching chats for assigned counselor: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(null);
         }
     }
@@ -72,7 +86,7 @@ public class ChatControler {
     // Get or create chat between counselor and student
     @GetMapping("/between")
     public ResponseEntity<Chat> getOrCreateChat(
-            @RequestParam Long counselorId,
+            @RequestParam String counselorId,
             @RequestParam String studentId,
             @RequestParam String counselorName
     ) {
@@ -93,9 +107,6 @@ public class ChatControler {
         return ResponseEntity.ok(savedChat);
     }
 
-
-
-
     // Get messages in a specific chat
     @GetMapping("/{chatId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable Long chatId) {
@@ -115,8 +126,9 @@ public class ChatControler {
                     ? payload.get("attachmentUrl").toString()
                     : null;
 
-            Long counselorId = payload.containsKey("counselorId") && payload.get("counselorId") != null
-                    ? Long.valueOf(payload.get("counselorId").toString())
+            // FIX: Remove the Long.valueOf conversion. The ID should be a String.
+            String counselorId = payload.containsKey("counselorId") && payload.get("counselorId") != null
+                    ? payload.get("counselorId").toString()
                     : null;
 
             String studentId = payload.containsKey("studentId") && payload.get("studentId") != null

@@ -1,6 +1,7 @@
 package com.example.Student.Controller;
 
 import com.example.Student.Model.Booking;
+import com.example.Student.Model.BookingStatus;
 import com.example.Student.Service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -22,17 +23,22 @@ public class BookingControler {
     @Autowired
     private BookingService bookingService;
 
+
     private final Path uploadDir = Paths.get("E:/Student/uploads").toAbsolutePath().normalize();
 
     @PostMapping("/add")
     public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
         try {
+            // The logic to create a separate Case has been removed.
+            // All booking status management is now handled directly by the BookingService.
             Booking created = bookingService.createBooking(booking);
+
             return ResponseEntity.status(201).body(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating booking: " + e.getMessage());
         }
     }
+
 
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings() {
@@ -62,12 +68,11 @@ public class BookingControler {
         return ResponseEntity.ok(bookings);
     }
 
-    @GetMapping("/counsel")
+    @GetMapping("/counselor")
     public ResponseEntity<List<Booking>> getBookingsByCounselorId(@RequestParam String counselorId) {
         List<Booking> bookings = bookingService.getBookingsByCounselorId(counselorId);
         return ResponseEntity.ok(bookings);
     }
-
 
 
     @PutMapping("/update/{id}")
@@ -136,7 +141,4 @@ public class BookingControler {
             return ResponseEntity.internalServerError().body("Could not read file: " + filename);
         }
     }
-
-
-
 }

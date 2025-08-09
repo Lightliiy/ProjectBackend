@@ -51,10 +51,11 @@ public class StudentService {
             return studentRepo.save(student);
         }
 
-    public Student findByStudentId(String studentId) {
-        return studentRepo.findByStudentId(studentId).orElse(null);
-    }
 
+    public Optional<Student> findByStudentId(String studentId) {
+
+        return studentRepo.findByStudentId(studentId);
+    }
     public List<Student> getStudentsByCounselorId(Long id) {
             return studentRepo.findByCounselorId(id);
         }

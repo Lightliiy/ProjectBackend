@@ -23,6 +23,7 @@ public class Config {
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()         // Allow ALL requests without auth
                 )
+
                 .httpBasic(httpBasic -> httpBasic.disable());  // Disable basic auth
 
         return http.build();
