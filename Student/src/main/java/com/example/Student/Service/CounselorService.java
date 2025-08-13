@@ -45,31 +45,7 @@ public class CounselorService {
         return counselorRepo.count();  // assuming you use JpaRepository
     }
 
-    public Counselor addCounselor(Counselor counselor) {
-        if (counselor.getId() == null) {
-            // New counselor - hash password
-            counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
-        } else {
-            // Existing counselor - check if password changed
-            Optional<Counselor> existing = counselorRepo.findById(counselor.getId());
-            if (existing.isPresent()) {
-                String existingPasswordHash = existing.get().getPassword();
-                String newPassword = counselor.getPassword();
 
-                // If the new password is different from the stored hash (means raw password provided), hash it
-                if (!passwordEncoder.matches(newPassword, existingPasswordHash)) {
-                    counselor.setPassword(passwordEncoder.encode(newPassword));
-                } else {
-                    // Password unchanged (already hashed), keep existing hash
-                    counselor.setPassword(existingPasswordHash);
-                }
-            } else {
-                // No existing counselor found, treat as new
-                counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
-            }
-        }
-        return counselorRepo.save(counselor);
-    }
 
 
     public Optional<Counselor> getCounselorByStudentId(String studentId) {
@@ -82,6 +58,25 @@ public class CounselorService {
     }
 
 
+    public Counselor addCounselor(Counselor counselor) {
+        if (counselor.getId() == null) {
+            // New counselor → hash password
+            counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
+        } else {
+            // Existing counselor → load current data
+            Counselor existing = counselorRepo.findById(counselor.getId())
+                    .orElseThrow(() -> new RuntimeException("Counselor not found"));
+
+            // Preserve password if none provided
+            if (counselor.getPassword() == null || counselor.getPassword().isBlank()) {
+                counselor.setPassword(existing.getPassword());
+            } else {
+                counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
+            }
+        }
+        return counselorRepo.save(counselor);
+    }
+
     public Counselor updateCounselor(Long id, Counselor updatedCounselor) {
         return counselorRepo.findById(id)
                 .map(existing -> {
@@ -90,17 +85,14 @@ public class CounselorService {
                     existing.setMaxCaseload(updatedCounselor.getMaxCaseload());
                     existing.setDepartment(updatedCounselor.getDepartment());
 
-                    // Handle password update if provided (and different)
-                    if (updatedCounselor.getPassword() != null && !updatedCounselor.getPassword().isEmpty()) {
-                        if (!passwordEncoder.matches(updatedCounselor.getPassword(), existing.getPassword())) {
-                            existing.setPassword(passwordEncoder.encode(updatedCounselor.getPassword()));
-                        }
+                    if (updatedCounselor.getPassword() != null && !updatedCounselor.getPassword().isBlank()) {
+                        existing.setPassword(passwordEncoder.encode(updatedCounselor.getPassword()));
                     }
-
                     return counselorRepo.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("Counselor not found"));
     }
+
 
     public void deleteCounselor(Long id) {
         counselorRepo.deleteById(id);

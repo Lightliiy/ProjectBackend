@@ -193,42 +193,4 @@ public class HeadControler {
         return ResponseEntity.ok(savedUser);
     }
 
-    @PutMapping("/reset-password")
-    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String currentPassword = request.get("currentPassword");
-        String newPassword = request.get("newPassword");
-
-        Map<String, String> response = new HashMap<>();
-
-        if (email == null || currentPassword == null || newPassword == null) {
-            response.put("error", "All fields are required");
-            return ResponseEntity.badRequest().body(response);
-        }
-
-        Optional<StaffUser> userOpt = staffRepo.findByEmail(email);
-
-        if (userOpt.isEmpty()) {
-            response.put("error", "User not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
-
-        StaffUser user = userOpt.get();
-
-        // Use PasswordEncoder to compare
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            response.put("error", "Current password is incorrect");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        // Encode the new password before saving
-        user.setPassword(passwordEncoder.encode(newPassword));
-        staffRepo.save(user);
-
-        response.put("message", "Password reset successfully");
-        return ResponseEntity.ok(response);
-    }
-
-
-
 }

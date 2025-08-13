@@ -1,7 +1,11 @@
 package com.example.Student.Controller;
 
 import com.example.Student.Model.Counselor;
+import com.example.Student.Model.StaffUser;
+import com.example.Student.Model.Student;
 import com.example.Student.Repository.CounselorRepo;
+import com.example.Student.Repository.StaffRepo;
+import com.example.Student.Repository.StudentRepo;
 import com.example.Student.Service.CounselorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +28,12 @@ public class CounselorControler {
 
     @Autowired
     private CounselorRepo counselorRepo;
+
+    @Autowired
+    private StudentRepo studentRepo;
+
+    @Autowired
+    private StaffRepo staffRepo;
 
     @GetMapping
     public List<Counselor> getAllCounselors() {
@@ -123,41 +133,65 @@ public class CounselorControler {
     }
 
     @PutMapping("/reset-password")
-    public ResponseEntity<?> resetPasswordByEmail(@RequestBody Map<String, String> updates) {
-        try {
-            String email = updates.get("email");
-            String currentPassword = updates.get("currentPassword");
-            String newPassword = updates.get("newPassword");
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
 
-            if (email == null || currentPassword == null || newPassword == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "All fields are required"));
-            }
+        Map<String, String> response = new HashMap<>();
 
-            Optional<Counselor> optionalCounselor = counselorRepo.findByEmail(email);
-            if (optionalCounselor.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Counselor not found"));
-            }
-
-            Counselor counselor = optionalCounselor.get();
-
-            // Check if current password matches
-            if (!passwordEncoder.matches(currentPassword, counselor.getPassword())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Current password is incorrect"));
-            }
-
-            counselor.setPassword(passwordEncoder.encode(newPassword));
-            counselorService.updateCounselor(counselor.getId(), counselor);
-
-            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "An error occurred: " + e.getMessage()));
+        if (email == null || currentPassword == null || newPassword == null) {
+            response.put("error", "All fields are required");
+            return ResponseEntity.badRequest().body(response);
         }
+
+        // Check Counselor
+        Optional<Counselor> counselorOpt = counselorRepo.findByEmail(email);
+        if (counselorOpt.isPresent()) {
+            Counselor counselor = counselorOpt.get();
+            if (!passwordEncoder.matches(currentPassword, counselor.getPassword())) {
+                response.put("error", "Current password is incorrect");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            counselor.setPassword(passwordEncoder.encode(newPassword));
+            counselorRepo.save(counselor);
+            response.put("message", "Counselor password reset successfully");
+            return ResponseEntity.ok(response);
+        }
+
+        // Check Staff
+        Optional<StaffUser> staffOpt = staffRepo.findByEmail(email);
+        if (staffOpt.isPresent()) {
+            StaffUser staff = staffOpt.get();
+            if (!passwordEncoder.matches(currentPassword, staff.getPassword())) {
+                response.put("error", "Current password is incorrect");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            staff.setPassword(passwordEncoder.encode(newPassword));
+            staffRepo.save(staff);
+            response.put("message", "Staff password reset successfully");
+            return ResponseEntity.ok(response);
+        }
+
+        // Check Student
+        Optional<Student> studentOpt = studentRepo.findByEmail(email);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (!passwordEncoder.matches(currentPassword, student.getPassword())) {
+                response.put("error", "Current password is incorrect");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            student.setPassword(passwordEncoder.encode(newPassword));
+            studentRepo.save(student);
+            response.put("message", "Student password reset successfully");
+            return ResponseEntity.ok(response);
+        }
+
+        response.put("error", "User not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+
 
 
 
