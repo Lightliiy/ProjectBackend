@@ -14,4 +14,9 @@ public class HeadService {
     public Head saveHeadOfDepartment(Head headOfDepartment) {
         return headOfDepartmentRepository.save(headOfDepartment);
     }
+
+    public Head findByEmail(String email) {
+        return headOfDepartmentRepository.findByEmail(email);
+    }
 }
+

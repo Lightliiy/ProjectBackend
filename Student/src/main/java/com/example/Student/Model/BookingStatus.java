@@ -2,8 +2,10 @@ package com.example.Student.Model;
 
 public enum BookingStatus {
     PENDING,
-    CONFIRMED,
+    CLOSED,
     ESCALATED,
+
+    ARCHIVED,
     CANCELLED,
     ESCALATED_TO_ADMIN,
     APPROVE,

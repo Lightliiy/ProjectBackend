@@ -21,6 +21,10 @@ public class StaffUser {
 
     private String name;
 
+    @Lob
+    @Column(name = "profile_image", columnDefinition = "LONGTEXT")
+    private String profileImage;
+
     @Column(unique = true)
     private String employeeId;
 
@@ -75,6 +79,14 @@ public class StaffUser {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     public Set<String> getRoles() {

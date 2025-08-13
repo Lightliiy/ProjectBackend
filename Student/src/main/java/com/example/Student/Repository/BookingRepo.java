@@ -16,7 +16,6 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     List<Booking> findByCounselorId(String counselorId);
     int countByCounselorId(String counselorId);
 
-    // New methods from the old CaseRepo, now applied to Booking
     List<Booking> findByStatus(BookingStatus status);
     long countByStatus(BookingStatus status);
 }

@@ -17,6 +17,5 @@ public interface StudentRepo extends JpaRepository<Student, Long> {
 
     int countByCounselorId(Long counselorId);
 
-    // Keep one of the two identical methods, preferably the standard 'findBy'
     Optional<Student> findByStudentId(String studentId);
 }

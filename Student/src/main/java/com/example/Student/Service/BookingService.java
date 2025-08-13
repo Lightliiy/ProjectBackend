@@ -69,6 +69,15 @@ public class BookingService {
         return bookings;
     }
 
+    public Booking archiveBooking(Long id) {
+        Booking booking = bookingRepo.findById(id).orElse(null);
+        if (booking != null) {
+            booking.setStatus(BookingStatus.ARCHIVED);
+            return bookingRepo.save(booking);
+        }
+        return null;
+    }
+
     public Booking updateBooking(Long id, Booking updatedBooking) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);
         if (optionalBooking.isPresent()) {
@@ -100,6 +109,45 @@ public class BookingService {
         return savedBooking;
     }
 
+
+    public List<Booking> getBookingsEscalatedToAdmin() {
+        List<Booking> bookings = bookingRepo.findByStatus(BookingStatus.ESCALATED_TO_ADMIN);
+        // Ensure student and counselor data is populated
+        for (Booking booking : bookings) {
+            studentService.findByStudentId(booking.getStudentId())
+                    .ifPresent(student -> {
+                        booking.setStudentName(student.getName());
+                    });
+            // You should also populate the counselor name here if needed
+        }
+        return bookings;
+    }
+
+    // New method for reassigning a counselor
+    public void reassignBooking(Long bookingId, Long counselorId) {
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            booking.setCounselorId(String.valueOf(counselorId));
+            booking.setStatus(BookingStatus.PENDING); // Or OPEN, as per your business logic
+            bookingRepo.save(booking);
+        } else {
+            throw new IllegalArgumentException("Booking not found with ID: " + bookingId);
+        }
+    }
+
+    // New method for closing a case
+    public void closeBooking(Long bookingId) {
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isPresent()) {
+            Booking booking = bookingOpt.get();
+            booking.setStatus(BookingStatus.CLOSED);
+            bookingRepo.save(booking);
+        } else {
+            throw new IllegalArgumentException("Booking not found with ID: " + bookingId);
+        }
+    }
+
     public Booking approveBooking(Long id) {
         Optional<Booking> optionalBooking = bookingRepo.findById(id);
         if (optionalBooking.isPresent()) {
@@ -119,6 +167,49 @@ public class BookingService {
         }
         return null;
     }
+
+    public Booking escalateBookingToHOD(Long bookingId, String hodUserId) {
+        Optional<Booking> optionalBooking = bookingRepo.findById(bookingId);
+        if (optionalBooking.isPresent()) {
+            Booking booking = optionalBooking.get();
+            booking.setStatus(BookingStatus.ESCALATED_TO_HOD);
+            bookingRepo.save(booking);
+
+            // Create notification for HOD about the escalation
+            notificationService.createNotification(
+                    hodUserId,
+                    "Booking Escalated",
+                    "Booking " + booking.getId() + " has been escalated to you for review.",
+                    "escalation"
+            );
+
+            return booking;
+        } else {
+            throw new IllegalArgumentException("Booking not found");
+        }
+    }
+
+    public Booking escalateBookingToAdmin(Long bookingId, String adminUserId) {
+        Optional<Booking> optionalBooking = bookingRepo.findById(bookingId);
+        if (optionalBooking.isPresent()) {
+            Booking booking = optionalBooking.get();
+            booking.setStatus(BookingStatus.ESCALATED_TO_ADMIN);
+            bookingRepo.save(booking);
+
+            notificationService.createNotification(
+                    adminUserId,
+                    "Booking Escalated",
+                    "Booking #" + booking.getId() + " has been escalated to Admin for review.",
+                    "escalation"
+            );
+
+            return booking;
+        } else {
+            throw new IllegalArgumentException("Booking not found");
+        }
+    }
+
+
 
     public Booking cancelBooking(Long id) {
         return bookingRepo.findById(id)

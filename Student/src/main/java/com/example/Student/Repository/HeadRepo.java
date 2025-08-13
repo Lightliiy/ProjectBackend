@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface HeadRepo extends JpaRepository<Head, Long> {
+
+    Head findByEmail(String email);
 }
 

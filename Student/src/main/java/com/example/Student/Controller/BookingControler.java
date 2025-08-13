@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -22,7 +23,6 @@ public class BookingControler {
 
     @Autowired
     private BookingService bookingService;
-
 
     private final Path uploadDir = Paths.get("E:/Student/uploads").toAbsolutePath().normalize();
 
@@ -46,7 +46,12 @@ public class BookingControler {
 
         String baseUrl = "http://localhost:8080/api/bookings/download/";
 
-        for (Booking booking : bookings) {
+        // Filter out archived bookings before sending to the client
+        List<Booking> activeBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.ARCHIVED)
+                .collect(Collectors.toList());
+
+        for (Booking booking : activeBookings) {
             if (booking.getAttachments() != null && !booking.getAttachments().isEmpty()) {
                 List<String> urls = booking.getAttachments().stream()
                         .map(filename -> baseUrl + filename)
@@ -55,7 +60,7 @@ public class BookingControler {
             }
         }
 
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(activeBookings);
     }
 
 
@@ -68,10 +73,16 @@ public class BookingControler {
         return ResponseEntity.ok(bookings);
     }
 
-    @GetMapping("/counselor")
+    @GetMapping("/counsel")
     public ResponseEntity<List<Booking>> getBookingsByCounselorId(@RequestParam String counselorId) {
         List<Booking> bookings = bookingService.getBookingsByCounselorId(counselorId);
-        return ResponseEntity.ok(bookings);
+
+        // Filter out archived bookings before sending to the client
+        List<Booking> activeBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.ARCHIVED)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(activeBookings);
     }
 
 
@@ -85,10 +96,23 @@ public class BookingControler {
         }
     }
 
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
         bookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<?> archiveBooking(@PathVariable Long id) {
+        Booking booking = bookingService.archiveBooking(id); // You must add this method to your service
+        if (booking != null) {
+            return ResponseEntity.ok(booking);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/counselor/{id}/count")
