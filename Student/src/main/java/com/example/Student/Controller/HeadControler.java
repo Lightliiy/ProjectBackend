@@ -2,24 +2,23 @@ package com.example.Student.Controller;
 
 import com.example.Student.Model.Booking;
 import com.example.Student.Model.BookingStatus;
-import com.example.Student.Model.Head;
 import com.example.Student.Model.StaffUser;
+import com.example.Student.Repository.BookingRepo;
+import com.example.Student.Repository.CounselorRepo;
 import com.example.Student.Repository.StaffRepo;
-import com.example.Student.Service.*;
+import com.example.Student.Service.BookingService;
+import com.example.Student.Service.CounselorService;
+import com.example.Student.Service.NotificationService;
+import com.example.Student.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import com.example.Student.Repository.BookingRepo;
-import com.example.Student.Repository.CounselorRepo;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,12 +44,11 @@ public class HeadControler {
     private CounselorService counselorService;
 
     @Autowired
-    private BookingRepo bookingRepo;
-
-    @Autowired
     private CounselorRepo counselorRepo;
 
-    // View all bookings with student names populated
+    @Autowired
+    private BookingRepo bookingRepo;
+
     @GetMapping("/all-bookings")
     public ResponseEntity<List<Booking>> getAllBookings() {
         List<Booking> bookings = bookingService.getAllBookings();
@@ -102,54 +100,76 @@ public class HeadControler {
         return ResponseEntity.notFound().build();
     }
 
-    // New, correct endpoint for reassigning a counselor
     @PostMapping("/reassign-counselor")
     public ResponseEntity<String> reassignCounselor(
-            @RequestParam Long caseId,
+            @RequestParam Long bookingId,
             @RequestParam Long counselorId
     ) {
         try {
-            bookingService.reassignBooking(caseId, counselorId); // Use a new service method
+            bookingService.reassignBooking(bookingId, counselorId);
             return ResponseEntity.ok("Counselor reassigned successfully.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // New endpoint to close a case
     @PostMapping("/close-case")
-    public ResponseEntity<String> closeCase(@RequestParam Long caseId) {
+    public ResponseEntity<String> closeCase(@RequestParam Long bookingId) {
         try {
-            bookingService.closeBooking(caseId); // Use a new service method
+            bookingService.closeBooking(bookingId);
             return ResponseEntity.ok("Case closed successfully.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // Get bookings escalated to Admin
     @GetMapping("/escalated-to-admin")
     public ResponseEntity<List<Booking>> getBookingsEscalatedToAdmin() {
         List<Booking> bookings = bookingService.getBookingsEscalatedToAdmin();
         return ResponseEntity.ok(bookings);
     }
 
-    // Get summary counts
     @GetMapping("/summary-counts")
-    public ResponseEntity<Map<String, Long>> getSummaryCounts() {
+    public ResponseEntity<Map<String, Object>> getSummaryCounts() {
         long totalStudents = studentService.countAllStudents();
         long totalCounselors = counselorService.countAllCounselors();
         long escalatedToAdminBookings = bookingRepo.countByStatus(BookingStatus.ESCALATED_TO_ADMIN);
         long pendingBookings = bookingRepo.countByStatus(BookingStatus.PENDING);
 
-        Map<String, Long> counts = new HashMap<>();
+        // --- Cases by Status for chart ---
+        List<Map<String, Object>> casesByStatus = new ArrayList<>();
+        Map<String, Object> pendingMap = new HashMap<>();
+        pendingMap.put("status", "PENDING");
+        pendingMap.put("count", pendingBookings);
+        casesByStatus.add(pendingMap);
+
+        Map<String, Object> escalatedMap = new HashMap<>();
+        escalatedMap.put("status", "ESCALATED_TO_ADMIN");
+        escalatedMap.put("count", escalatedToAdminBookings);
+        casesByStatus.add(escalatedMap);
+
+        // --- Students by Department for chart ---
+        List<Map<String, Object>> studentsByProgram = new ArrayList<>();
+        for (String dept : studentService.getAllDepartments()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("program", dept);
+            map.put("count", studentService.countByDepartment(dept));
+            studentsByProgram.add(map);
+        }
+
+
+        Map<String, Object> counts = new HashMap<>();
         counts.put("totalStudents", totalStudents);
         counts.put("totalCounselors", totalCounselors);
         counts.put("pendingBookings", pendingBookings);
         counts.put("escalatedToAdminBookings", escalatedToAdminBookings);
+        counts.put("casesByStatus", casesByStatus);
+        counts.put("studentsByProgram", studentsByProgram);
 
         return ResponseEntity.ok(counts);
     }
+
+
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(Authentication authentication) {
@@ -157,7 +177,7 @@ public class HeadControler {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String email = authentication.getName(); // The logged-in user's email (usually username)
+        String email = authentication.getName();
 
         Optional<StaffUser> userOpt = staffRepo.findByEmail(email);
         if (userOpt.isEmpty()) {
@@ -192,5 +212,4 @@ public class HeadControler {
 
         return ResponseEntity.ok(savedUser);
     }
-
 }

@@ -40,13 +40,13 @@ public class CounselorService {
         // Assuming Student entity has a field 'counselorId'
         return studentRepo.countByCounselorId(counselorId);
     }
-
-    public long countAllCounselors() {
-        return counselorRepo.count();  // assuming you use JpaRepository
+    public List<Counselor> findAll() {
+        return counselorRepo.findAll();
     }
 
-
-
+    public long countAllCounselors() {
+        return counselorRepo.count();
+    }
 
     public Optional<Counselor> getCounselorByStudentId(String studentId) {
         return counselorRepo.findByStudents_StudentId(studentId);

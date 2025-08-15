@@ -16,7 +16,7 @@ public class NotificationControler {
     @Autowired
     private NotificationService notificationService;
 
-    // ✅ Get notifications for a specific user
+    // Get notifications for a specific user
     @GetMapping("/user")
     public ResponseEntity<List<Notification>> getUserNotifications(@RequestParam String userId) {
         System.out.println("Fetching notifications for userId: " + userId);
@@ -24,7 +24,7 @@ public class NotificationControler {
         return ResponseEntity.ok(notifications);
     }
 
-    // ✅ Create new notification
+
     @PostMapping
     public ResponseEntity<Notification> createNotification(@RequestBody Notification notification) {
         System.out.println("Creating notification for userId: " + notification.getUserId());
@@ -37,7 +37,6 @@ public class NotificationControler {
         return ResponseEntity.ok(created);
     }
 
-    // ✅ Mark all as read for a user
     @PutMapping("/markAllRead/{userId}")
     public ResponseEntity<String> markAllAsRead(@PathVariable String userId) {
         System.out.println("Marking all notifications as read for userId: " + userId);
@@ -45,7 +44,6 @@ public class NotificationControler {
         return ResponseEntity.ok("All notifications marked as read");
     }
 
-    // ✅ Reply to a notification
     @PostMapping("/{notificationId}/reply")
     public ResponseEntity<String> replyToNotification(
             @PathVariable Long notificationId,

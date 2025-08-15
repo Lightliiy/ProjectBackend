@@ -6,16 +6,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface BookingRepo extends JpaRepository<Booking, Long> {
 
-    // Existing methods from the original BookingRepo
+    // Get bookings by student ID
     List<Booking> findByStudentId(String studentId);
-    List<Booking> findByCounselorId(String counselorId);
-    int countByCounselorId(String counselorId);
 
+    // Get bookings by counselor ID
+    List<Booking> findByCounselorId(String counselorId);
+
+    // Count bookings by counselor ID
+    long countByCounselorId(String counselorId);
+
+    // Get bookings by status
     List<Booking> findByStatus(BookingStatus status);
+
+    // Count bookings by status
     long countByStatus(BookingStatus status);
 }

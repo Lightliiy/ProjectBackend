@@ -191,10 +191,6 @@ public class CounselorControler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-
-
-
-
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateCounselor(
             @PathVariable Long id,
@@ -211,8 +207,6 @@ public class CounselorControler {
                     .body(Map.of("error", "An error occurred"));
         }
     }
-
-
     @DeleteMapping("/delete/{id}")
     public void deleteCounselor(@PathVariable Long id) {
         counselorService.deleteCounselor(id);

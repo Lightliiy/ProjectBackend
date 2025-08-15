@@ -29,16 +29,12 @@ public class BookingControler {
     @PostMapping("/add")
     public ResponseEntity<?> createBooking(@RequestBody Booking booking) {
         try {
-            // The logic to create a separate Case has been removed.
-            // All booking status management is now handled directly by the BookingService.
             Booking created = bookingService.createBooking(booking);
-
             return ResponseEntity.status(201).body(created);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating booking: " + e.getMessage());
         }
     }
-
 
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings() {
@@ -46,7 +42,6 @@ public class BookingControler {
 
         String baseUrl = "http://localhost:8080/api/bookings/download/";
 
-        // Filter out archived bookings before sending to the client
         List<Booking> activeBookings = bookings.stream()
                 .filter(booking -> booking.getStatus() != BookingStatus.ARCHIVED)
                 .collect(Collectors.toList());
@@ -63,28 +58,30 @@ public class BookingControler {
         return ResponseEntity.ok(activeBookings);
     }
 
-
     @GetMapping("/student")
     public ResponseEntity<List<Booking>> getBookingsByStudent(@RequestParam String studentId) {
         List<Booking> bookings = bookingService.getBookingsByStudent(studentId);
-        if (bookings.isEmpty()) {
+
+        List<Booking> activeBookings = bookings.stream()
+                .filter(booking -> booking.getStatus() != BookingStatus.ARCHIVED)
+                .collect(Collectors.toList());
+
+        if (activeBookings.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(activeBookings);
     }
 
     @GetMapping("/counsel")
     public ResponseEntity<List<Booking>> getBookingsByCounselorId(@RequestParam String counselorId) {
         List<Booking> bookings = bookingService.getBookingsByCounselorId(counselorId);
 
-        // Filter out archived bookings before sending to the client
         List<Booking> activeBookings = bookings.stream()
                 .filter(booking -> booking.getStatus() != BookingStatus.ARCHIVED)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(activeBookings);
     }
-
 
     @PutMapping("/update/{id}")
     public ResponseEntity<Booking> updateBooking(@PathVariable Long id, @RequestBody Booking booking) {
@@ -96,18 +93,9 @@ public class BookingControler {
         }
     }
 
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
-        bookingService.deleteBooking(id);
-        return ResponseEntity.noContent().build();
-    }
-
-
-
     @PutMapping("/{id}/archive")
     public ResponseEntity<?> archiveBooking(@PathVariable Long id) {
-        Booking booking = bookingService.archiveBooking(id); // You must add this method to your service
+        Booking booking = bookingService.archiveBooking(id);
         if (booking != null) {
             return ResponseEntity.ok(booking);
         } else {
@@ -116,8 +104,8 @@ public class BookingControler {
     }
 
     @GetMapping("/counselor/{id}/count")
-    public ResponseEntity<Map<String, Integer>> getBookingCount(@PathVariable String id) {
-        int count = bookingService.countBookingsByCounselor(id);
+    public ResponseEntity<Map<String, Long>> getBookingCount(@PathVariable String id) {
+        Long count = bookingService.countBookingsByCounselor(id);
         return ResponseEntity.ok(Map.of("count", count));
     }
 
@@ -138,6 +126,28 @@ public class BookingControler {
             return ResponseEntity.ok(booking);
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    // HOD escalation endpoint
+    @PutMapping("/{id}/escalate/hod")
+    public ResponseEntity<?> escalateBookingToHOD(@PathVariable Long id) {
+        try {
+            Booking booking = bookingService.escalateBookingToHOD(id);
+            return ResponseEntity.ok(booking);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Admin escalation endpoint
+    @PutMapping("/{id}/escalate/admin")
+    public ResponseEntity<?> escalateBookingToAdmin(@PathVariable Long id, @RequestParam String adminUserId) {
+        try {
+            Booking booking = bookingService.escalateBookingToAdmin(id, adminUserId);
+            return ResponseEntity.ok(booking);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

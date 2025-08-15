@@ -35,7 +35,18 @@ public class StudentService {
             return studentRepo.findAll();
         }
 
-        public Student authenticate(String email, String rawPassword) {
+    // Returns list of distinct departments
+
+    public List<String> getAllDepartments() {
+        return studentRepo.findDistinctDepartments();
+    }
+
+    public long countByDepartment(String department) {
+        return studentRepo.countByDepartment(department);
+    }
+
+
+    public Student authenticate(String email, String rawPassword) {
             Optional<Student> optionalStudent = studentRepo.findByEmail(email);
             if (optionalStudent.isPresent()) {
                 Student student = optionalStudent.get();
