@@ -60,22 +60,27 @@ public class CounselorService {
 
     public Counselor addCounselor(Counselor counselor) {
         if (counselor.getId() == null) {
-            // New counselor → hash password
-            counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
+            // New counselor → hash password if not already hashed
+            if (!counselor.getPassword().startsWith("$2a$")) {
+                counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
+            }
         } else {
             // Existing counselor → load current data
             Counselor existing = counselorRepo.findById(counselor.getId())
                     .orElseThrow(() -> new RuntimeException("Counselor not found"));
 
-            // Preserve password if none provided
             if (counselor.getPassword() == null || counselor.getPassword().isBlank()) {
                 counselor.setPassword(existing.getPassword());
-            } else {
+            } else if (!counselor.getPassword().startsWith("$2a$")) {
                 counselor.setPassword(passwordEncoder.encode(counselor.getPassword()));
+            } else {
+                // Already hashed, keep as is
+                counselor.setPassword(counselor.getPassword());
             }
         }
         return counselorRepo.save(counselor);
     }
+
 
     public Counselor updateCounselor(Long id, Counselor updatedCounselor) {
         return counselorRepo.findById(id)

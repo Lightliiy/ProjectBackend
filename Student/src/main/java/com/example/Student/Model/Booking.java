@@ -1,15 +1,10 @@
 package com.example.Student.Model;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Booking {
 
     @Id
@@ -38,7 +33,6 @@ public class Booking {
     @Column(name = "is_escalated", nullable = false)
     private boolean isEscalated = false;
 
-    // Add this new field for the HOD comment
     @Column(length = 1000)
     private String hodComment;
 
@@ -49,8 +43,6 @@ public class Booking {
     private List<String> attachmentUrls;
 
     public Booking() {}
-
-    // ================= Getters and Setters =================
 
     public Long getId() {
         return id;
@@ -143,7 +135,6 @@ public class Booking {
         this.attachmentUrls = attachmentUrls;
     }
 
-    // New getter and setter for hodComment
     public String getHodComment() {
         return hodComment;
     }

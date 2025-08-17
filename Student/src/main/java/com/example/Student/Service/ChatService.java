@@ -23,10 +23,6 @@ public class ChatService {
     private final CounselorRepo counselorRepo;
     private final MessageRepo messageRepo;
 
-//    @Autowired
-//    private AgoraTokenService agoraTokenService;
-
-
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 

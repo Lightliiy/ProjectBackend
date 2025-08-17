@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,6 +25,9 @@ public class AuthControler {
 
     @Autowired
     private CounselorService counselorService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private StaffService staffService;
@@ -46,6 +50,32 @@ public class AuthControler {
                     .body(Map.of("message", "Registration failed"));
         }
     }
+
+    @PostMapping("/register-counselor")
+    public ResponseEntity<?> registerCounselor(@RequestBody Counselor counselor) {
+        try {
+            // Hash the password before saving
+            String hashedPassword = passwordEncoder.encode(counselor.getPassword());
+            counselor.setPassword(hashedPassword);
+
+            Counselor savedCounselor = counselorService.addCounselor(counselor);
+
+            // Return only success message and saved counselor info
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "message", "Counselor registered successfully",
+                            "user", savedCounselor
+                    ));
+
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Counselor with this email already exists"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Failed to register counselor"));
+        }
+    }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {

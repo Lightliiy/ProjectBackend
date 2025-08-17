@@ -18,6 +18,10 @@ public class Counselor {
     private int maxCaseload;
     private String department;
 
+    @Lob
+    @Column(name = "profile_image", columnDefinition = "LONGTEXT")
+    private String profileImage;
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -55,6 +59,14 @@ public class Counselor {
 
     public List<Student> getStudents() { return students; }
     public void setStudents(List<Student> students) { this.students = students; }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }

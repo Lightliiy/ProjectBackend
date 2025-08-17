@@ -9,7 +9,9 @@ import com.example.Student.Repository.HeadRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -46,6 +48,22 @@ public class BookingService {
         );
 
         return savedBooking;
+    }
+
+    public BookingService(BookingRepo bookingRepo) {
+        this.bookingRepo = bookingRepo;
+    }
+
+    public Map<String, Long> getIssueTypeStats(String counselorId) {
+        List<Object[]> results = bookingRepo.countBookingsByIssueType(counselorId);
+
+        Map<String, Long> stats = new HashMap<>();
+        for (Object[] row : results) {
+            String issueType = (String) row[0];
+            Long count = (Long) row[1];
+            stats.put(issueType, count);
+        }
+        return stats;
     }
 
     // Get all bookings with student names
@@ -138,19 +156,17 @@ public class BookingService {
     public Booking approveBooking(Long id) {
         return bookingRepo.findById(id)
                 .map(booking -> {
-                    booking.setStatus(BookingStatus.APPROVE);
+                    booking.setStatus(BookingStatus.APPROVED);
                     bookingRepo.save(booking);
-
                     notificationService.createNotification(
                             booking.getStudentId(),
                             "Booking Approved",
                             "Your booking for " + booking.getScheduledDate() + " at " + booking.getTimeSlot() + " has been approved.",
                             "booking"
                     );
-
                     return booking;
                 })
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + id));
     }
 
     // Escalate booking to HOD
@@ -199,17 +215,19 @@ public class BookingService {
         return bookingRepo.findById(id)
                 .map(booking -> {
                     booking.setStatus(BookingStatus.CANCELLED);
-                    Booking saved = bookingRepo.save(booking);
-
+                    bookingRepo.save(booking);
                     notificationService.createNotification(
                             booking.getStudentId(),
                             "Booking Cancelled",
                             "Your booking for " + booking.getScheduledDate() + " at " + booking.getTimeSlot() + " has been cancelled.",
-                            "booking"
+                            "booking_cancellation"
                     );
-
-                    return saved;
+                    return booking;
                 })
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + id));
+    }
+
+    public Long countPendingBookingsByCounselor(Long counselorId) {
+        return bookingRepo.countByCounselorIdAndStatus(String.valueOf(counselorId), BookingStatus.PENDING);
     }
 }

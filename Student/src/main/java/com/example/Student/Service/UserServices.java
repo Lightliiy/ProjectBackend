@@ -19,10 +19,6 @@ public class UserServices {
 
     // Method to handle user registration
     public Student register(Student student) {
-        // --- CRITICAL FIX: Move the password encoding and saving logic OUTSIDE the 'if' blocks ---
-        // The original code would throw an exception and never save the user.
-
-        // 1. Check if email already exists
         if (studentRepo.findByEmail(student.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered.");
         }

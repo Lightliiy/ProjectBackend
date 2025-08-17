@@ -119,6 +119,22 @@ public class BookingControler {
         }
     }
 
+    @GetMapping("/counselor/{counselorId}/issue-type-stats")
+    public ResponseEntity<Map<String, Long>> getIssueTypeStats(@PathVariable String counselorId) {
+        Map<String, Long> stats = bookingService.getIssueTypeStats(counselorId);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/counselor/{counselorId}/pending/count")
+    public ResponseEntity<Long> getPendingBookingsCountForCounselor(@PathVariable Long counselorId) {
+        try {
+            Long count = bookingService.countPendingBookingsByCounselor(counselorId);
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(0L);
+        }
+    }
+
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
         Booking booking = bookingService.cancelBooking(id);
