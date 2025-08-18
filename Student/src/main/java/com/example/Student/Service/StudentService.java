@@ -12,104 +12,104 @@ import java.util.Optional;
 @Service
 public class StudentService {
 
-        @Autowired
-        private StudentRepo studentRepo;
+	@Autowired
+	private StudentRepo studentRepo;
 
-        @Autowired
-        private PasswordEncoder passwordEncoder;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
-        public StudentService(StudentRepo studentRepo) {
-            this.studentRepo = studentRepo;
-        }
+	public StudentService(StudentRepo studentRepo) {
+		this.studentRepo = studentRepo;
+	}
 
-        public Student registerStudent(Student student) {
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
-            return studentRepo.save(student);
-        }
+	public Student registerStudent(Student student) {
+		student.setPassword(passwordEncoder.encode(student.getPassword()));
+		return studentRepo.save(student);
+	}
 
-        public long getStudentCount() {
-            return studentRepo.count();
-        }
+	public long getStudentCount() {
+		return studentRepo.count();
+	}
 
-        public List<Student> getAllStudents() {
-            return studentRepo.findAll();
-        }
+	public List<Student> getAllStudents() {
+		return studentRepo.findAll();
+	}
 
-    // Returns list of distinct departments
+	// Returns list of distinct departments
 
-    public List<String> getAllDepartments() {
-        return studentRepo.findDistinctDepartments();
-    }
+	public List<String> getAllDepartments() {
+		return studentRepo.findDistinctDepartments();
+	}
 
-    public long countByDepartment(String department) {
-        return studentRepo.countByDepartment(department);
-    }
-
-
-    public Student authenticate(String email, String rawPassword) {
-            Optional<Student> optionalStudent = studentRepo.findByEmail(email);
-            if (optionalStudent.isPresent()) {
-                Student student = optionalStudent.get();
-                if (passwordEncoder.matches(rawPassword, student.getPassword())) {
-                    return student;
-                }
-            }
-            return null;
-        }
-
-        public Student saveStudent(Student student) {
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
-            return studentRepo.save(student);
-        }
+	public long countByDepartment(String department) {
+		return studentRepo.countByDepartment(department);
+	}
 
 
-    public Optional<Student> findByStudentId(String studentId) {
+	public Student authenticate(String email, String rawPassword) {
+		Optional<Student> optionalStudent = studentRepo.findByEmail(email);
+		if (optionalStudent.isPresent()) {
+			Student student = optionalStudent.get();
+			if (passwordEncoder.matches(rawPassword, student.getPassword())) {
+				return student;
+			}
+		}
+		return null;
+	}
 
-        return studentRepo.findByStudentId(studentId);
-    }
-    public List<Student> getStudentsByCounselorId(Long id) {
-            return studentRepo.findByCounselorId(id);
-        }
+	public Student saveStudent(Student student) {
+		student.setPassword(passwordEncoder.encode(student.getPassword()));
+		return studentRepo.save(student);
+	}
 
-        public long countAllStudents() {
-            return studentRepo.count();
-        }
 
-        public List<Student> getStudentsByCounselorEmail(String email) {
-            return studentRepo.findByCounselorEmail(email);
-        }
+	public Optional<Student> findByStudentId(String studentId) {
 
-        public String addStudent(Student student) {
-            System.out.println("Student received: " + student);
-            studentRepo.save(student);
-            return "Student added successfully!";
-        }
+		return studentRepo.findByStudentId(studentId);
+	}
+	public List<Student> getStudentsByCounselorId(Long id) {
+		return studentRepo.findByCounselorId(id);
+	}
 
-        public Student updateStudent(Long id, Student updatedStudent) {
-            Optional<Student> optionalStudent = studentRepo.findById(id);
-            if (optionalStudent.isPresent()) {
-                Student existingStudent = optionalStudent.get();
+	public long countAllStudents() {
+		return studentRepo.count();
+	}
 
-                existingStudent.setStudentId(updatedStudent.getStudentId());
-                existingStudent.setName(updatedStudent.getName());
-                existingStudent.setEmail(updatedStudent.getEmail());
-                existingStudent.setPhone(updatedStudent.getPhone());
-                existingStudent.setDepartment(updatedStudent.getDepartment());
-                existingStudent.setYearLevel(updatedStudent.getYearLevel());
-                existingStudent.setCounselor(updatedStudent.getCounselor());
-                existingStudent.setProfileImage(updatedStudent.getProfileImage());
+	public List<Student> getStudentsByCounselorEmail(String email) {
+		return studentRepo.findByCounselorEmail(email);
+	}
 
-                return studentRepo.save(existingStudent);
-            } else {
-                throw new RuntimeException("Student with id " + id + " not found");
-            }
-        }
+	public String addStudent(Student student) {
+		System.out.println("Student received: " + student);
+		studentRepo.save(student);
+		return "Student added successfully!";
+	}
 
-        public void deleteStudent(Long id) {
-            if (studentRepo.existsById(id)) {
-                studentRepo.deleteById(id);
-            } else {
-                throw new RuntimeException("Student with id " + id + " not found");
-            }
-        }
-    }
+	public Student updateStudent(Long id, Student updatedStudent) {
+		Optional<Student> optionalStudent = studentRepo.findById(id);
+		if (optionalStudent.isPresent()) {
+			Student existingStudent = optionalStudent.get();
+
+			existingStudent.setStudentId(updatedStudent.getStudentId());
+			existingStudent.setName(updatedStudent.getName());
+			existingStudent.setEmail(updatedStudent.getEmail());
+			existingStudent.setPhone(updatedStudent.getPhone());
+			existingStudent.setDepartment(updatedStudent.getDepartment());
+			existingStudent.setYearLevel(updatedStudent.getYearLevel());
+			existingStudent.setCounselor(updatedStudent.getCounselor());
+			existingStudent.setProfileImage(updatedStudent.getProfileImage());
+
+			return studentRepo.save(existingStudent);
+		} else {
+			throw new RuntimeException("Student with id " + id + " not found");
+		}
+	}
+
+	public void deleteStudent(Long id) {
+		if (studentRepo.existsById(id)) {
+			studentRepo.deleteById(id);
+		} else {
+			throw new RuntimeException("Student with id " + id + " not found");
+		}
+	}
+}

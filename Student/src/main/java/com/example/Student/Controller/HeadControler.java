@@ -75,29 +75,26 @@ public class HeadControler {
 
     @PostMapping("/escalate-to-hod/{bookingId}")
     public ResponseEntity<Booking> escalateToHOD(@PathVariable Long bookingId) {
-        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-        if (bookingOpt.isPresent()) {
-            Booking booking = bookingOpt.get();
-            booking.setStatus(BookingStatus.ESCALATED_TO_HOD);
-            Booking savedBooking = bookingRepo.save(booking);
-            return ResponseEntity.ok(savedBooking);
+        try {
+            Booking saved = bookingService.escalateBookingToHOD(bookingId);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/escalate-to-admin/{bookingId}")
     public ResponseEntity<Booking> escalateToAdmin(
             @PathVariable Long bookingId,
             @RequestParam String hodComment) {
-
         Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-        if (bookingOpt.isPresent()) {
-            Booking booking = bookingOpt.get();
-            booking.setStatus(BookingStatus.ESCALATED_TO_ADMIN);
-            booking.setHodComment(hodComment);
-            return ResponseEntity.ok(bookingRepo.save(booking));
+        if (bookingOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        Booking booking = bookingOpt.get();
+        booking.setHodComment(hodComment);
+        Booking saved = bookingService.escalateBookingToAdmin(bookingId, "");
+        return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/reassign-counselor")
