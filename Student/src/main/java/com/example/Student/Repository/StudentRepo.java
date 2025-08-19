@@ -18,6 +18,10 @@ public interface StudentRepo extends JpaRepository<Student, Long> {
 
     int countByCounselorId(Long counselorId);
 
+    List<Student> findByDepartmentAndCounselorIsNull(String department);
+    List<Student> findByDepartment(String department);
+
+
     Optional<Student> findByStudentId(String studentId);
 
     @Query("SELECT DISTINCT s.department FROM Student s")

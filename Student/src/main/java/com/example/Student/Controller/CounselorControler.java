@@ -187,25 +187,29 @@ public class CounselorControler {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody Counselor updatedCounselor) {
-
         Optional<Counselor> optionalCounselor = counselorRepo.findById(id);
+
         if (optionalCounselor.isEmpty()) {
-            return new ResponseEntity<>("Counselor not found", HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Counselor not found");
         }
 
         Counselor counselor = optionalCounselor.get();
         counselor.setName(updatedCounselor.getName());
         counselor.setEmail(updatedCounselor.getEmail());
+        counselor.setDepartment(updatedCounselor.getDepartment());
+        counselor.setMaxCaseload(updatedCounselor.getMaxCaseload());
         counselor.setProfileImage(updatedCounselor.getProfileImage());
 
-        // Only update password if a new one is provided
+        // Only update password if provided
         if (updatedCounselor.getPassword() != null && !updatedCounselor.getPassword().isEmpty()) {
             counselor.setPassword(passwordEncoder.encode(updatedCounselor.getPassword()));
         }
 
         Counselor savedCounselor = counselorRepo.save(counselor);
-        return new ResponseEntity<>(savedCounselor, HttpStatus.OK);
+        return ResponseEntity.ok(savedCounselor);
     }
+
+
     @DeleteMapping("/delete/{id}")
     public void deleteCounselor(@PathVariable Long id) {
         counselorService.deleteCounselor(id);

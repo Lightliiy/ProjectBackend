@@ -15,6 +15,10 @@ public class StudentControler {
     @Autowired
     private StudentService studentService;
 
+    public StudentControler(StudentService studentService) {
+        this.studentService = studentService;
+    }
+
     @GetMapping
     public List<Student> getAllStudents() {
         return studentService.getAllStudents();
@@ -41,7 +45,11 @@ public class StudentControler {
         }
     }
 
+    @PostMapping("/assign/department/{department}")
+    public String assignStudents(@PathVariable String department) {
 
+        return studentService.assignStudentsToCounselors(department);
+    }
     @GetMapping("/by-counselor-id/{id}")
     public List<Student> getStudentsByCounselorId(@PathVariable Long id) {
         return studentService.getStudentsByCounselorId(id);

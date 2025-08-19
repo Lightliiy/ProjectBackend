@@ -1,10 +1,12 @@
 package com.example.Student.Service;
 
+import com.example.Student.Model.Counselor;
 import com.example.Student.Model.Student;
+import com.example.Student.Repository.CounselorRepo;
 import com.example.Student.Repository.StudentRepo;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,14 +14,14 @@ import java.util.Optional;
 @Service
 public class StudentService {
 
-	@Autowired
-	private StudentRepo studentRepo;
+	private final StudentRepo studentRepo;
+	private final CounselorRepo counselorRepo;
+	private final PasswordEncoder passwordEncoder;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-
-	public StudentService(StudentRepo studentRepo) {
+	public StudentService(StudentRepo studentRepo, CounselorRepo counselorRepo, PasswordEncoder passwordEncoder) {
 		this.studentRepo = studentRepo;
+		this.counselorRepo = counselorRepo;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public Student registerStudent(Student student) {
@@ -35,8 +37,6 @@ public class StudentService {
 		return studentRepo.findAll();
 	}
 
-	// Returns list of distinct departments
-
 	public List<String> getAllDepartments() {
 		return studentRepo.findDistinctDepartments();
 	}
@@ -44,7 +44,6 @@ public class StudentService {
 	public long countByDepartment(String department) {
 		return studentRepo.countByDepartment(department);
 	}
-
 
 	public Student authenticate(String email, String rawPassword) {
 		Optional<Student> optionalStudent = studentRepo.findByEmail(email);
@@ -62,11 +61,39 @@ public class StudentService {
 		return studentRepo.save(student);
 	}
 
+	@Transactional
+	public String assignStudentsToCounselors(String department) {
+		List<Student> unassignedStudents = studentRepo.findByDepartmentAndCounselorIsNull(department);
+		List<Counselor> counselors = counselorRepo.findByDepartment(department);
+
+		if (counselors.isEmpty()) {
+			return "No counselors found for department: " + department;
+		}
+		if (unassignedStudents.isEmpty()) {
+			return "No unassigned students found for department: " + department;
+		}
+
+		int counselorCount = counselors.size();
+		int index = 0;
+
+		for (Student student : unassignedStudents) {
+			Counselor assignedCounselor = counselors.get(index % counselorCount);
+
+			if (assignedCounselor.getMaxCaseload() == 0 ||
+					assignedCounselor.getStudents().size() < assignedCounselor.getMaxCaseload()) {
+				student.setCounselor(assignedCounselor);
+				studentRepo.save(student);
+			}
+			index++;
+		}
+
+		return "Students successfully assigned equally to counselors in department: " + department;
+	}
 
 	public Optional<Student> findByStudentId(String studentId) {
-
 		return studentRepo.findByStudentId(studentId);
 	}
+
 	public List<Student> getStudentsByCounselorId(Long id) {
 		return studentRepo.findByCounselorId(id);
 	}

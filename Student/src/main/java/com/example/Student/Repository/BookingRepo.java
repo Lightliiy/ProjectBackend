@@ -23,6 +23,8 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     // Get bookings by status
     List<Booking> findByStatus(BookingStatus status);
 
+
+
     Long countByCounselorIdAndStatus(String counselorId, BookingStatus status);
 
     // Count bookings by status

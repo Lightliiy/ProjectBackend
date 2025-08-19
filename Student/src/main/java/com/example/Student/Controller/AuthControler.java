@@ -120,7 +120,7 @@ public class AuthControler {
             return ResponseEntity.ok(user);
         } else {
             System.out.println("Student login failed for " + email);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Check your email or password"));
         }
     }
 

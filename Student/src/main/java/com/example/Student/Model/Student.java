@@ -27,7 +27,7 @@ public class Student {
     // New fields for booking notification
      // Time of booking
     @Column(nullable = true)
-    private String profileImage;      // URL to an image/avatar
+    private String profileImage;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "counselor_id", nullable = true)
